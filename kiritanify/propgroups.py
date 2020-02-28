@@ -119,27 +119,6 @@ class CaptionCacheState(bpy.types.PropertyGroup, ICacheState):
     )
 
 
-class TachieCacheState(bpy.types.PropertyGroup, ICacheState):
-  name = "kiritanify.tachie_cache_state"
-
-  invalid: bpy.props.BoolProperty(name='invalid', default=True)
-
-  tachie_name: bpy.props.StringProperty(name='tachie name')
-  style: bpy.props.PointerProperty(type=TachieStyle, name='style')
-
-  def invalidate(self) -> None:
-    self.ivnalid = True
-
-  def update(self, chara: 'KiritanifyCharacterSetting', seq: KiritanifySequence) -> None:
-    self.invalid = False
-    # TODO: 
-
-  def is_changed(self, chara: 'KiritanifyCharacterSetting', seq: KiritanifySequence) -> bool:
-    if self.invalid:
-      return True
-    # TODO:
-
-
 class VoiceCacheState(bpy.types.PropertyGroup, ICacheState):
   name = "kiritanify.voice_cache_state"
 
