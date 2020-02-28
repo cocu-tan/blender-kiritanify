@@ -7,6 +7,15 @@ from .propgroups import (
   PROPGROUP_CLASSES,
 )
 
+bl_info = {
+  "name": "kiritanify",
+  "category": "Sequencer",
+  "author": "mohuton",
+  "version": (1, 0),
+  "blender": (2, 80, 0),
+  "description": "Generate voiceroid sound data from caption data.",
+}
+
 CLASSES = (
     PROPGROUP_CLASSES
     + OPS_CLASSES
