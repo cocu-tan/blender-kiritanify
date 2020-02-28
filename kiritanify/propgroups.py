@@ -238,7 +238,7 @@ class KiritanifyGlobalSetting(bpy.types.PropertyGroup):
   characters: bpy.props.CollectionProperty(type=KiritanifyCharacterSetting)
 
 
-CLASSES = [
+PROPGROUP_CLASSES = [
   CaptionStyle,
   TachieStyle,
   VoiceStyle,
