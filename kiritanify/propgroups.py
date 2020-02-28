@@ -8,7 +8,7 @@ from .utils import _datetime_str, _seq_setting
 
 
 class CaptionStyle(bpy.types.PropertyGroup):
-  name = "kiritanify.caption_style"
+  name = 'kiritanify.caption_style'
 
   fill_color: bpy.props.FloatVectorProperty(
     name='Fill', subtype='COLOR_GAMMA',
@@ -55,7 +55,7 @@ class TachieStyle(bpy.types.PropertyGroup):
 
 
 class VoiceStyle(bpy.types.PropertyGroup):
-  name = "kiritanify.voice_style"
+  name = 'kiritanify.voice_style'
 
   volume: bpy.props.FloatProperty(name="Volume", min=0, max=2.0, default=1)
   speed: bpy.props.FloatProperty(name="Speed", min=0.5, max=4.0, default=1)
@@ -136,7 +136,7 @@ class CaptionCacheState(bpy.types.PropertyGroup, ICacheState):
 
 
 class VoiceCacheState(bpy.types.PropertyGroup, ICacheState):
-  name = "kiritanify.voice_cache_state"
+  name = 'kiritanify.voice_cache_state'
 
   invalid: bpy.props.BoolProperty(name='invalid', default=True)
 
@@ -179,7 +179,7 @@ class VoiceCacheState(bpy.types.PropertyGroup, ICacheState):
 
 
 class KiritanifyCacheSetting(bpy.types.PropertyGroup):
-  name = "kiritanify.cache_dir_setting"
+  name = 'kiritanify.cache_dir_setting'
 
   def voice_path(self, chara: 'KiritanifyCharacterSetting', seq: KiritanifyScriptSequence) -> Path:
     dir_path = self._gen_dir('voice', chara)
@@ -190,14 +190,14 @@ class KiritanifyCacheSetting(bpy.types.PropertyGroup):
     return dir_path / f'{_datetime_str()}.png'
 
   def _gen_dir(self, data_type: str, chara: 'KiritanifyCharacterSetting') -> Path:
-    abspath = bpy.path.abspath(f"//{data_type}/{chara.chara_name}")
+    abspath = bpy.path.abspath(f'//{data_type}/{chara.chara_name}')
     path = Path(abspath)
     path.mkdir(exist_ok=True)
     return path
 
 
 class KiritanifySequenceSetting(bpy.types.PropertyGroup):
-  name = "kiritanify.sequence_setting"
+  name = 'kiritanify.sequence_setting'
 
   text: bpy.props.StringProperty(name='text')
 
@@ -233,14 +233,14 @@ class KiritanifySequenceSetting(bpy.types.PropertyGroup):
 
 
 class KiritanifyCharacterSetting(bpy.types.PropertyGroup):
-  name = "kiritanify.character_setting"
+  name = 'kiritanify.character_setting'
 
-  chara_name: bpy.props.StringProperty(name="Name")
-  cid: bpy.props.IntProperty(name="cid", min=0)
+  chara_name: bpy.props.StringProperty(name='Name')
+  cid: bpy.props.IntProperty(name='cid', min=0)
 
-  caption_style: bpy.props.PointerProperty(name="Caption style", type=CaptionStyle)
-  tachie_style: bpy.props.PointerProperty(name="Tachie style", type=TachieStyle)
-  voice_style: bpy.props.PointerProperty(name="Voice style", type=VoiceStyle)
+  caption_style: bpy.props.PointerProperty(name='Caption style', type=CaptionStyle)
+  tachie_style: bpy.props.PointerProperty(name='Tachie style', type=TachieStyle)
+  voice_style: bpy.props.PointerProperty(name='Voice style', type=VoiceStyle)
 
   tachie_directory: bpy.props.StringProperty(name="Tachie dir", subtype="DIR_PATH", default="")
 
