@@ -245,9 +245,16 @@ class KiritanifyCharacterSetting(bpy.types.PropertyGroup):
   tachie_directory: bpy.props.StringProperty(name="Tachie dir", subtype="DIR_PATH", default="")
 
 
+class SeikaServerSetting(bpy.types.PropertyGroup):
+  addr: bpy.props.StringProperty(name='SeikaCenter Addr', default='http://192.168.88.7:7180')
+  user: bpy.props.StringProperty(name='User name', default='SeikaServerUser')
+  password: bpy.props.StringProperty(name='Password', default='SeikaServerPassword')
+
+
 class KiritanifyGlobalSetting(bpy.types.PropertyGroup):
   name = "kiritanify.global_setting"
 
+  seika_server: bpy.props.PointerProperty(type=SeikaServerSetting)
   characters: bpy.props.CollectionProperty(type=KiritanifyCharacterSetting)
 
 
