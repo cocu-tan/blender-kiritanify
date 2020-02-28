@@ -1,13 +1,13 @@
 import datetime
 from typing import Dict, List, Union
 
-from bpy.types import Context, Sequence, Sequences, TextSequence
+from bpy.types import Context, Sequence, Sequences
 
 from kiritanify.propgroups import (
   KiritanifyGlobalSetting,
   KiritanifySequenceSetting
 )
-from types import KiritanifySequence
+from kiritanify.types import KiritanifyScriptSequence
 
 
 def _fps(context: Context):
@@ -26,7 +26,7 @@ def _global_setting(context: Context) -> KiritanifyGlobalSetting:
   return context.scene.kiritanify
 
 
-def _seq_setting(seq: KiritanifySequence) -> KiritanifySequenceSetting:
+def _seq_setting(seq: KiritanifyScriptSequence) -> KiritanifySequenceSetting:
   return seq.kiritanify
 
 
