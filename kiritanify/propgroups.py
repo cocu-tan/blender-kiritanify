@@ -1,8 +1,9 @@
 from pathlib import Path
 
 import bpy
+from bpy.types import Context
 
-from .types import KiritanifySequence
+from .types import KiritanifyScriptSequence
 from .utils import _datetime_str, _seq_setting
 
 
@@ -80,10 +81,15 @@ class ICacheState:
   def invalidate(self) -> None:
     raise NotImplementedError
 
-  def update(self, chara: 'KiritanifyCharacterSetting', seq: KiritanifySequence) -> None:
+  def update(
+      self,
+      context: Context,
+      chara: 'KiritanifyCharacterSetting',
+      seq: KiritanifyScriptSequence,
+  ) -> None:
     raise NotImplementedError
 
-  def is_changed(self, chara: 'KiritanifyCharacterSetting', seq: KiritanifySequence) -> bool:
+  def is_changed(self, context, chara: 'KiritanifyCharacterSetting', seq: KiritanifyScriptSequence) -> bool:
     raise NotImplementedError
 
 
@@ -98,21 +104,31 @@ class CaptionCacheState(bpy.types.PropertyGroup, ICacheState):
   def invalidate(self) -> None:
     self.ivnalid = True
 
-  def update(self, chara: 'KiritanifyCharacterSetting', seq: KiritanifySequence) -> None:
+  def update(
+      self,
+      context: Context,
+      chara: 'KiritanifyCharacterSetting',
+      seq: KiritanifyScriptSequence,
+  ) -> None:
     _setting = _seq_setting(seq)
     text = _setting.caption_text()
-    style = _setting.caption_style(chara)
+    style = _setting.caption_style(context, chara)
     self.invalid = False
     self.text = text
     self.style.update(style)
 
-  def is_changed(self, chara: 'KiritanifyCharacterSetting', seq: KiritanifySequence) -> bool:
+  def is_changed(
+      self,
+      context: Context,
+      chara: 'KiritanifyCharacterSetting',
+      seq: KiritanifyScriptSequence,
+  ) -> bool:
     if self.invalid:
       return True
 
     _setting = _seq_setting(seq)
     text = _setting.caption_text()
-    style = _setting.caption_style(chara)
+    style = _setting.caption_style(context, chara)
     return not (
         self.style.is_equal(style)
         and self.text == text
@@ -130,21 +146,31 @@ class VoiceCacheState(bpy.types.PropertyGroup, ICacheState):
   def invalidate(self) -> None:
     self.invalid = True
 
-  def update(self, chara: 'KiritanifyCharacterSetting', seq: KiritanifySequence) -> None:
+  def update(
+      self,
+      context: Context,
+      chara: 'KiritanifyCharacterSetting',
+      seq: KiritanifyScriptSequence,
+  ) -> None:
     _setting = _seq_setting(seq)
     text = _setting.voice_text()
-    style = _setting.voice_style(chara)
+    style = _setting.voice_style(context, chara)
     self.invalid = False
     self.text = text
     self.style.update(style)
 
-  def is_changed(self, chara: 'KiritanifyCharacterSetting', seq: KiritanifySequence) -> bool:
+  def is_changed(
+      self,
+      context: Context,
+      chara: 'KiritanifyCharacterSetting',
+      seq: KiritanifyScriptSequence,
+  ) -> bool:
     if self.invalid:
       return True
 
     _setting = _seq_setting(seq)
     text = _setting.voice_text()
-    style = _setting.voice_style(chara)
+    style = _setting.voice_style(context, chara)
 
     return not (
         self.style.is_equal(style)
@@ -155,11 +181,11 @@ class VoiceCacheState(bpy.types.PropertyGroup, ICacheState):
 class KiritanifyCacheSetting(bpy.types.PropertyGroup):
   name = "kiritanify.cache_dir_setting"
 
-  def voice_path(self, chara: 'KiritanifyCharacterSetting', seq: KiritanifySequence) -> Path:
+  def voice_path(self, chara: 'KiritanifyCharacterSetting', seq: KiritanifyScriptSequence) -> Path:
     dir_path = self._gen_dir('voice', chara)
     return dir_path / f'{_datetime_str()}.ogg'
 
-  def caption_path(self, chara: 'KiritanifyCharacterSetting', seq: KiritanifySequence) -> Path:
+  def caption_path(self, chara: 'KiritanifyCharacterSetting', seq: KiritanifyScriptSequence) -> Path:
     dir_path = self._gen_dir('caption', chara)
     return dir_path / f'{_datetime_str()}.png'
 
@@ -186,13 +212,21 @@ class KiritanifySequenceSetting(bpy.types.PropertyGroup):
       return self.custom_voice_text
     return self.text
 
-  def voice_style(self, chara: 'KiritanifyCharacterSetting') -> VoiceStyle:
+  def voice_style(
+      self,
+      context: Context,
+      chara: 'KiritanifyCharacterSetting',
+  ) -> VoiceStyle:
     return chara.voice_style
 
   def caption_text(self) -> str:
     return self.text
 
-  def caption_style(self, chara: 'KiritanifyCharacterSetting') -> CaptionStyle:
+  def caption_style(
+      self,
+      context: Context,
+      chara: 'KiritanifyCharacterSetting',
+  ) -> CaptionStyle:
     if self.use_custom_caption_style:
       return self.custom_caption_style
     return chara.caption_style
@@ -222,7 +256,6 @@ PROPGROUP_CLASSES = [
   TachieStyle,
   VoiceStyle,
   CaptionCacheState,
-  TachieCacheState,
   VoiceCacheState,
   KiritanifyCacheSetting,
   KiritanifySequenceSetting,

@@ -7,4 +7,4 @@ ImageSequence = Union[bpy.types.ImageSequence, bpy.types.Sequence]
 SoundSequence = Union[bpy.types.SoundSequence, bpy.types.Sequence]
 
 
-KiritanifySequence = ImageSequence
+KiritanifyScriptSequence = ImageSequence
