@@ -2,6 +2,7 @@ from pathlib import Path
 
 import bpy
 from bpy.types import Context
+from typing import Optional
 
 from .types import KiritanifyScriptSequence
 from .utils import _datetime_str, _seq_setting
@@ -244,6 +245,9 @@ class KiritanifyCharacterSetting(bpy.types.PropertyGroup):
 
   tachie_directory: bpy.props.StringProperty(name="Tachie dir", subtype="DIR_PATH", default="")
 
+  def __repr__(self):
+    return f'<KiritanifyCharacterSetting chara_name={self.chara_name} cid={self.cid}>'
+
 
 class SeikaServerSetting(bpy.types.PropertyGroup):
   addr: bpy.props.StringProperty(name='SeikaCenter Addr', default='http://192.168.88.7:7180')
@@ -258,6 +262,15 @@ class KiritanifyGlobalSetting(bpy.types.PropertyGroup):
 
   start_channel_for_scripts: bpy.props.IntProperty('Script start channel', min=1, default=10)
   characters: bpy.props.CollectionProperty(type=KiritanifyCharacterSetting)
+
+  def character_index(
+      self,
+      chara: KiritanifyCharacterSetting,
+  ) -> int:
+    for _idx, _chara in enumerate(self.characters):
+      if chara == _chara:
+        return _idx
+    raise ValueError(f'Unexpected character: {chara!r}')
 
 
 PROPGROUP_CLASSES = [
