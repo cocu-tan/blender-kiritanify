@@ -132,25 +132,12 @@ class TachieCacheState(bpy.types.PropertyGroup, ICacheState):
 
   def update(self, chara: 'KiritanifyCharacterSetting', seq: KiritanifySequence) -> None:
     self.invalid = False
-
-    _setting = _seq_setting(seq)
-    name = _setting.tachie_name(chara)
-    style = _setting.tachie_style(chara)
-
-    self.tachie_name = name
-    self.style.update(style)
+    # TODO: 
 
   def is_changed(self, chara: 'KiritanifyCharacterSetting', seq: KiritanifySequence) -> bool:
     if self.invalid:
       return True
-
-    _setting = _seq_setting(seq)
-    name = _setting.tachie_name(chara)
-    style = _setting.tachie_style(chara)
-    return (
-        self.tachie_name == name
-        and self.style.is_equal(style)
-    )
+    # TODO:
 
 
 class VoiceCacheState(bpy.types.PropertyGroup, ICacheState):
@@ -209,29 +196,27 @@ class KiritanifySequenceSetting(bpy.types.PropertyGroup):
 
   text: bpy.props.StringProperty(name='text')
 
+  use_custom_voice_text: bpy.props.BoolProperty(name='use custom voice text')
+  custom_voice_text: bpy.props.StringProperty(name='custom voice text')
+
+  use_custom_caption_style: bpy.props.BoolProperty(name='use custom property')
+  custom_caption_style: bpy.props.PointerProperty(type=CaptionStyle, name='caption style')
+
   def voice_text(self) -> str:
-    # TODO:
-    pass
+    if self.use_custom_voice_text:
+      return self.custom_voice_text
+    return self.text
 
   def voice_style(self, chara: 'KiritanifyCharacterSetting') -> VoiceStyle:
-    # TODO:
-    pass
+    return chara.voice_style
 
   def caption_text(self) -> str:
-    # TODO:
-    pass
+    return self.text
 
   def caption_style(self, chara: 'KiritanifyCharacterSetting') -> CaptionStyle:
-    # TODO: 
-    pass
-
-  def tachie_name(self, chara: 'KiritanifyCharacterSetting') -> str:
-    # TODO: 
-    pass
-
-  def tachie_style(self, chara: 'KiritanifyCharacterSetting') -> TachieStyle:
-    # TODO: 
-    pass
+    if self.use_custom_caption_style:
+      return self.custom_caption_style
+    return chara.caption_style
 
 
 class KiritanifyCharacterSetting(bpy.types.PropertyGroup):
@@ -243,6 +228,8 @@ class KiritanifyCharacterSetting(bpy.types.PropertyGroup):
   caption_style: bpy.props.PointerProperty(name="Caption style", type=CaptionStyle)
   tachie_style: bpy.props.PointerProperty(name="Tachie style", type=TachieStyle)
   voice_style: bpy.props.PointerProperty(name="Voice style", type=VoiceStyle)
+
+  tachie_directory: bpy.props.StringProperty(name="Tachie dir", subtype="DIR_PATH", default="")
 
 
 class KiritanifyGlobalSetting(bpy.types.PropertyGroup):
