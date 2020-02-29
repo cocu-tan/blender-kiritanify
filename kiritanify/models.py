@@ -1,14 +1,16 @@
 import base64
 import hashlib
+import logging
 from typing import Optional
 
 from bpy.types import Context, Sequence
 
 from kiritanify.propgroups import KiritanifyCharacterSetting, _global_setting, _seq_setting
 from kiritanify.seika_center import synthesize_voice, trim_silence
-from kiritanify.types import KiritanifyScriptSequence, SoundSequence
+from kiritanify.types import ImageSequence, KiritanifyScriptSequence, SoundSequence
 from kiritanify.utils import _sequences
 
+logger = logging.getLogger(__name__)
 
 class CharacterScript:
   """
@@ -20,6 +22,7 @@ class CharacterScript:
   chara: KiritanifyCharacterSetting
   seq: KiritanifyScriptSequence
   voice_seq: Optional[SoundSequence]
+  caption_seq: Optional[ImageSequence]
 
   context: Context
 
@@ -28,11 +31,15 @@ class CharacterScript:
       chara: KiritanifyCharacterSetting,
       seq: KiritanifyScriptSequence,
       voice_seq: Optional[SoundSequence],
+      caption_seq: Optional[ImageSequence],
       context: Context,
   ):
     self.chara = chara
+
     self.seq = seq
     self.voice_seq = voice_seq
+    self.caption_seq = caption_seq
+
     self.context = context
 
   @classmethod
@@ -43,10 +50,12 @@ class CharacterScript:
       context: Context,
   ) -> 'CharacterScript':
     voice_seq = _seq_setting(seq).find_voice_seq(context)
+    caption_seq = _seq_setting(seq).find_caption_seq(context)
     return cls(
       chara=chara,
       seq=seq,
       voice_seq=voice_seq,
+      caption_seq=caption_seq,
       context=context,
     )
 
@@ -69,7 +78,7 @@ class CharacterScript:
       self._seq_setting.voice_cache_state.update(
         global_setting=_global_setting(self.context),
         chara=self.chara,
-        seq=self.seq
+        seq=self.seq,
       )
 
     self._align_sequence(
@@ -115,9 +124,21 @@ class CharacterScript:
 
     should_regenerate: bool = _seq_setting(self.seq) \
       .caption_cache_state.is_changed(_global_setting(self.context), self.chara, self.seq)
-
     if should_regenerate:
-      pass
+      self.caption_seq = self._generate_caption()
+      self._seq_setting.caption_seq_name = self.caption_seq.name
+      self._seq_setting.caption_cache_state.update(
+        global_setting=_global_setting(self.context),
+        chara=self.chara,
+        seq=self.seq,
+      )
+
+    self._align_sequence(
+      seq=self.caption_seq,
+      channel=self.chara.caption_channel(self._global_setting),
+      frame_start=self.seq.frame_start,
+      frame_final_end=self.seq.frame_final_end,
+    )
 
   def _generate_caption(self):
     pass

@@ -4,7 +4,7 @@ from typing import Optional
 import bpy
 from bpy.types import AdjustmentSequence, Context
 
-from kiritanify.types import KiritanifyScriptSequence, SoundSequence
+from kiritanify.types import ImageSequence, KiritanifyScriptSequence, SoundSequence
 from kiritanify.utils import _datetime_str, _sequences_all, trim_bracketed_sentence
 
 
@@ -213,6 +213,7 @@ class KiritanifyScriptSequenceSetting(bpy.types.PropertyGroup):
 
   # seq reference
   voice_seq_name: bpy.props.StringProperty(name='Voice seq name')
+  caption_seq_name: bpy.props.StringProperty(name='Caption seq name')
 
   # cache
   voice_cache_state: bpy.props.PointerProperty(name='voice cache state', type=VoiceCacheState)
@@ -250,6 +251,11 @@ class KiritanifyScriptSequenceSetting(bpy.types.PropertyGroup):
     if self.voice_seq_name == '' or self.voice_seq_name not in _sequences_all(context):
       return None
     return _sequences_all(context)[self.voice_seq_name]
+
+  def find_caption_seq(self, context: Context) -> Optional[ImageSequence]:
+    if self.caption_seq_name == '' or self.caption_seq_name not in _sequences_all(context):
+      return None
+    return _sequences_all(context)[self.caption_seq_name]
 
 
 class KiritanifyCharacterSetting(bpy.types.PropertyGroup):
