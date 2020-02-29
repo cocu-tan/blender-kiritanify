@@ -4,10 +4,11 @@ from typing import Optional
 
 from bpy.types import Context, Sequence
 
+from kiritanify.propgroup_utils import _global_setting, _seq_setting
 from kiritanify.propgroups import KiritanifyCharacterSetting
 from kiritanify.seika_center import synthesize_voice, trim_silence
 from kiritanify.types import KiritanifyScriptSequence, SoundSequence
-from kiritanify.utils import _global_setting, _seq_setting, _sequences
+from kiritanify.utils import _sequences
 
 
 class CharacterScript:

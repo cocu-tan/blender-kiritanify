@@ -4,8 +4,9 @@ from typing import Optional
 import bpy
 from bpy.types import Context
 
+from .propgroup_utils import _seq_setting
 from .types import KiritanifyScriptSequence, SoundSequence
-from .utils import _datetime_str, _seq_setting, _sequences_all, trim_bracketed_sentence
+from .utils import _datetime_str, _sequences_all, trim_bracketed_sentence
 
 
 class CaptionStyle(bpy.types.PropertyGroup):
@@ -285,6 +286,15 @@ class SeikaCenterSetting(bpy.types.PropertyGroup):
   password: bpy.props.StringProperty(name='Password', default='SeikaServerPassword')
 
 
+def _get_character_enum_items(scene, context):
+  kiritanify: 'KiritanifyGlobalSetting' = context.scene.kiritanify
+  result = [
+    (c.chara_name, c.chara_name, "")
+    for c in kiritanify.characters  # type: KiritanifyCharacterSetting
+  ]
+  return result
+
+
 class KiritanifyGlobalSetting(bpy.types.PropertyGroup):
   name = "kiritanify.global_setting"
 
@@ -294,6 +304,8 @@ class KiritanifyGlobalSetting(bpy.types.PropertyGroup):
   characters: bpy.props.CollectionProperty(type=KiritanifyCharacterSetting)
 
   cache_setting: bpy.props.PointerProperty(type=KiritanifyCacheSetting, name='cache setting')
+
+  new_script_chara_name: bpy.props.EnumProperty(items=_get_character_enum_items, name='new chara name')
 
   def character_index(
       self,

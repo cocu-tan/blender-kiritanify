@@ -1,12 +1,13 @@
-from typing import Dict, Set, Union
+from typing import Dict, Optional, Set, Union
 
 import bpy
-from bpy.types import Context, ImageSequence
+from bpy.types import Context, ImageSequence, SoundSequence
 
 import kiritanify.types
 from kiritanify.models import CharacterScript
+from kiritanify.propgroup_utils import _global_setting
 from kiritanify.propgroups import KiritanifyCharacterSetting
-from kiritanify.utils import _global_setting
+from kiritanify.utils import _current_frame, _sequences
 
 
 class KIRITANIFY_OT_RunKiritanifyForScripts(bpy.types.Operator):
@@ -32,6 +33,46 @@ class KIRITANIFY_OT_RunKiritanifyForScripts(bpy.types.Operator):
     return {'FINISHED'}
 
 
+class KIRITANIFY_OT_NewScriptSequence(bpy.types.Operator):
+  bl_idname = "kiritanify.new_script_sequence"
+  bl_label = "NewScriptSequence"
+
+  def execute(self, context: Context):
+    current_frame = _current_frame(context)
+    chara = self.find_character(context)
+    if chara is None:
+      return {'FINISHED'}
+    _sequences(context).new_image(
+      frame_start=current_frame,
+      filepath='',
+      channel=chara.caption_channel(_global_setting(context)),
+    )
+    return {'FINISHED'}
+
+  def find_character(self, context: Context) -> Optional[KiritanifyCharacterSetting]:
+    setting = _global_setting(context)
+    for chara in setting.characters:
+      if chara.chara_name == setting.new_script_chara_name:
+        return chara
+
+
+class KIRITANIFY_OT_ToggleRamCaching(bpy.types.Operator):
+  bl_idname = "kiritanify.toggle_ram_caching"
+  bl_label = "ToggleRamCaching"
+
+  def execute(self, context):
+    target_channels = [
+      chara.voice_channel
+      for chara in _global_setting(context).characters
+    ]
+    for seq in _sequences(context):  # type: Sequence
+      if seq.channel in target_channels and isinstance(seq, SoundSequence):
+        seq.sound.use_memory_cache = not seq.sound.use_memory_cache
+    return {'FINISHED'}
+
+
 OPS_CLASSES = [
   KIRITANIFY_OT_RunKiritanifyForScripts,
+  KIRITANIFY_OT_NewScriptSequence,
+  KIRITANIFY_OT_ToggleRamCaching,
 ]
