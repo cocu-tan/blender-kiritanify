@@ -197,8 +197,8 @@ class KiritanifyCacheSetting(bpy.types.PropertyGroup):
     return path
 
 
-class KiritanifySequenceSetting(bpy.types.PropertyGroup):
-  name = 'kiritanify.sequence_setting'
+class KiritanifyScriptSequenceSetting(bpy.types.PropertyGroup):
+  name = 'kiritanify.script_sequence_setting'
 
   text: bpy.props.StringProperty(name='text')
 
@@ -294,7 +294,7 @@ PROPGROUP_CLASSES = [
   CaptionCacheState,
   VoiceCacheState,
   KiritanifyCacheSetting,
-  KiritanifySequenceSetting,
+  KiritanifyScriptSequenceSetting,
   KiritanifyCharacterSetting,
   KiritanifyGlobalSetting,
 ]

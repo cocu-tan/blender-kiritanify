@@ -5,7 +5,7 @@ from bpy.types import Context, Sequence, Sequences
 
 from kiritanify.propgroups import (
   KiritanifyGlobalSetting,
-  KiritanifySequenceSetting
+  KiritanifyScriptSequenceSetting
 )
 from kiritanify.types import KiritanifyScriptSequence
 
@@ -26,7 +26,7 @@ def _global_setting(context: Context) -> KiritanifyGlobalSetting:
   return context.scene.kiritanify
 
 
-def _seq_setting(seq: KiritanifyScriptSequence) -> KiritanifySequenceSetting:
+def _seq_setting(seq: KiritanifyScriptSequence) -> KiritanifyScriptSequenceSetting:
   return seq.kiritanify
 
 

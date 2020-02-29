@@ -3,7 +3,7 @@ import bpy
 from .ops import OPS_CLASSES
 from .propgroups import (
   KiritanifyGlobalSetting,
-  KiritanifySequenceSetting,
+  KiritanifyScriptSequenceSetting,
   PROPGROUP_CLASSES,
 )
 
@@ -28,7 +28,7 @@ def register():
 
   bpy.types.ImageSequence.kiritanify = bpy.props.PointerProperty(
     name="Kiritanify Settings",
-    type=KiritanifySequenceSetting,
+    type=KiritanifyScriptSequenceSetting,
   )
   bpy.types.Scene.kiritanify = bpy.props.PointerProperty(
     name="Kiritanify Global Settings",
