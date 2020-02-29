@@ -23,6 +23,13 @@ class CaptionStyle(bpy.types.PropertyGroup):
   )
   stroke_width: bpy.props.FloatProperty(name="Stroke width", default=8)
 
+  font_path: bpy.props.StringProperty(
+    name='Font path',
+    default='/usr/share/fonts/TTF/mplus-1p-regular.ttf',
+  )
+  font_size: bpy.props.IntProperty(name='Font size', default=42)
+  max_height_px: bpy.props.IntProperty(name='Caption height px', default=256)
+
   def is_equal(self, style: 'CaptionStyle') -> bool:
     return (
         self.fill_color == style.fill_color

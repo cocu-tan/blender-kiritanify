@@ -1,16 +1,19 @@
 import base64
 import hashlib
 import logging
-from typing import Optional
+from typing import Optional, Tuple
 
+from PIL.Image import Image
 from bpy.types import Context, Sequence
 
+from kiritanify.caption_renderer import render_text
 from kiritanify.propgroups import KiritanifyCharacterSetting, _global_setting, _seq_setting
 from kiritanify.seika_center import synthesize_voice, trim_silence
 from kiritanify.types import ImageSequence, KiritanifyScriptSequence, SoundSequence
 from kiritanify.utils import _sequences
 
 logger = logging.getLogger(__name__)
+
 
 class CharacterScript:
   """
@@ -92,17 +95,18 @@ class CharacterScript:
 
   def _generate_voice_sequence(self) -> SoundSequence:
     sound_path = self._global_setting.cache_setting.voice_path(self.chara, self.seq)
+    voice_text = self._seq_setting.voice_text()
 
     segment = synthesize_voice(
       seika_setting=self._global_setting.seika_server,
       chara=self.chara,
       style=self._seq_setting.voice_style(self._global_setting, self.chara),
-      script=self._seq_setting.voice_text(),
+      script=voice_text,
     )
     trim_silence(segment).export(str(sound_path), format='ogg')
 
     voice_seq = _sequences(self.context).new_sound(
-      name=f'Voice:{self.chara.chara_name}:{self.hash_text()}',
+      name=f'Voice:{self.chara.chara_name}:{self.hash_text(voice_text)}',
       filepath=str(sound_path),
       channel=self.chara.voice_channel(self._global_setting),
       frame_start=self.seq.frame_final_start,
@@ -110,12 +114,6 @@ class CharacterScript:
     voice_seq.show_waveform = True
 
     return voice_seq
-
-  def hash_text(self):
-    text = self._seq_setting.voice_text()
-    digest = hashlib.blake2s(text.encode('UTF-8')).digest()
-    base64encoded = base64.b64encode(digest, altchars=b'-_')
-    return base64encoded[:16]
 
   def maybe_update_caption(self):
     ss = _seq_setting(self.seq)
@@ -141,7 +139,34 @@ class CharacterScript:
     )
 
   def _generate_caption(self):
-    pass
+    caption_style = self._seq_setting.caption_style(self._global_setting, self.chara)
+    caption_text = self._seq_setting.caption_text()
+    caption_path = self._global_setting.cache_setting.caption_path(self.chara, self.seq)
+
+    canvas_size: Tuple[int, int] = (
+      self.context.scene.render.resolution_x,
+      caption_style.max_height_px,
+    )
+
+    image: Image = render_text(
+      canvas_size=canvas_size,
+      text=caption_text,
+      background_color=(0, 0, 0, 0),
+      fill_color=caption_style.fill_color,
+      stroke_color=caption_style.stroke_color,
+      stroke_width=caption_style.stroke_width,
+      font_path=caption_style.font_path,
+      font_size=caption_style.font_size,
+    )
+    with open(caption_path, 'bw') as fp:
+      image.save(fp)
+
+    return _sequences(self.context).new_image(
+      name=f'Caption:{self.chara.chara_name}:{self.hash_text(caption_text)}',
+      filepath=caption_path,
+      channel=self.chara.caption_channel(self._global_setting),
+      frame_start=self.seq.frame_start,
+    )
 
   @staticmethod
   def _align_sequence(
@@ -173,6 +198,12 @@ class CharacterScript:
   @property
   def _seq_setting(self):
     return _seq_setting(self.seq)
+
+  def hash_text(self, text):
+    text = self._seq_setting.voice_text()
+    digest = hashlib.blake2s(text.encode('UTF-8')).digest()
+    base64encoded = base64.b64encode(digest, altchars=b'-_')
+    return base64encoded[:16]
 
   def __repr__(self):
     return f'<CharaScript chara={self.chara.name} seq={self.seq} vseq={self.voice_seq}>'
