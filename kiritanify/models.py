@@ -1,18 +1,20 @@
 import base64
 import hashlib
 import logging
+from pathlib import Path
 from typing import Optional, Tuple
 
 from PIL.Image import Image
 from bpy.types import Context, Sequence
 
 from kiritanify.caption_renderer import render_text
-from kiritanify.propgroups import KiritanifyCharacterSetting, _global_setting, _seq_setting
+from kiritanify.propgroups import CaptionStyle, KiritanifyCharacterSetting, _global_setting, _seq_setting
 from kiritanify.seika_center import synthesize_voice, trim_silence
 from kiritanify.types import ImageSequence, KiritanifyScriptSequence, SoundSequence
 from kiritanify.utils import _sequences
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class CharacterScript:
@@ -67,11 +69,10 @@ class CharacterScript:
     if not ss.gen_voice:
       return
 
-    should_regenerate: bool = ss.voice_cache_state.is_changed(
-      global_setting=_global_setting(self.context),
-      chara=self.chara,
-      seq=self.seq,
-    )
+    seq_missing = self.voice_seq is None
+    is_changed = _seq_setting(self.seq).voice_cache_state \
+      .is_changed(_global_setting(self.context), self.chara, self.seq)
+    should_regenerate: bool = seq_missing or is_changed
     if should_regenerate:
       if self.voice_seq is not None:
         self._remove_sequence(self.voice_seq)
@@ -83,6 +84,7 @@ class CharacterScript:
         chara=self.chara,
         seq=self.seq,
       )
+    assert self.voice_seq is not None
 
     self._align_sequence(
       seq=self.voice_seq,
@@ -120,9 +122,14 @@ class CharacterScript:
     if not ss.gen_caption:
       return
 
-    should_regenerate: bool = _seq_setting(self.seq) \
-      .caption_cache_state.is_changed(_global_setting(self.context), self.chara, self.seq)
+    seq_missing = self.caption_seq is None
+    is_changed = _seq_setting(self.seq).caption_cache_state \
+      .is_changed(_global_setting(self.context), self.chara, self.seq)
+    should_regenerate: bool = seq_missing or is_changed
     if should_regenerate:
+      if self.caption_seq is not None:
+        self._remove_sequence(self.caption_seq)
+        self.caption_seq = None
       self.caption_seq = self._generate_caption()
       self._seq_setting.caption_seq_name = self.caption_seq.name
       self._seq_setting.caption_cache_state.update(
@@ -130,6 +137,7 @@ class CharacterScript:
         chara=self.chara,
         seq=self.seq,
       )
+    assert self.caption_seq is not None
 
     self._align_sequence(
       seq=self.caption_seq,
@@ -139,9 +147,9 @@ class CharacterScript:
     )
 
   def _generate_caption(self):
-    caption_style = self._seq_setting.caption_style(self._global_setting, self.chara)
-    caption_text = self._seq_setting.caption_text()
-    caption_path = self._global_setting.cache_setting.caption_path(self.chara, self.seq)
+    caption_style: CaptionStyle = self._seq_setting.caption_style(self._global_setting, self.chara)
+    caption_text: str = self._seq_setting.caption_text()
+    caption_path: Path = self._global_setting.cache_setting.caption_path(self.chara, self.seq)
 
     canvas_size: Tuple[int, int] = (
       self.context.scene.render.resolution_x,
@@ -158,15 +166,18 @@ class CharacterScript:
       font_path=caption_style.font_path,
       font_size=caption_style.font_size,
     )
-    with open(caption_path, 'bw') as fp:
-      image.save(fp)
+    image.save(caption_path.open('bw'))
 
-    return _sequences(self.context).new_image(
+    logger.debug(f'caption_path: {caption_path}')
+
+    image_seq: ImageSequence = _sequences(self.context).new_image(
       name=f'Caption:{self.chara.chara_name}:{self.hash_text(caption_text)}',
-      filepath=caption_path,
+      filepath=str(caption_path),
       channel=self.chara.caption_channel(self._global_setting),
       frame_start=self.seq.frame_start,
     )
+    image_seq.use_translation = True
+    return image_seq
 
   @staticmethod
   def _align_sequence(
@@ -203,7 +214,7 @@ class CharacterScript:
     text = self._seq_setting.voice_text()
     digest = hashlib.blake2s(text.encode('UTF-8')).digest()
     base64encoded = base64.b64encode(digest, altchars=b'-_')
-    return base64encoded[:16]
+    return base64encoded[:16].decode('UTF-8')
 
   def __repr__(self):
     return f'<CharaScript chara={self.chara.name} seq={self.seq} vseq={self.voice_seq}>'
