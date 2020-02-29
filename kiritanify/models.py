@@ -11,7 +11,7 @@ class CharacterScript:
   Represents character script, which basically holds two sequence; caption image sequence (KiritanifyScriptSequence) 
   and voice sound sequence. 
   
-  Expected to be used as one-time data structure. Do not store permanently and use cross Operator. 
+  Expected to be used as one-time data structure. Do not store permanently and do not use cross Operator. 
   """
   chara: KiritanifyCharacterSetting
   seq: KiritanifyScriptSequence
