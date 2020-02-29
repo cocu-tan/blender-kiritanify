@@ -1,4 +1,5 @@
 import datetime
+import re
 from typing import Dict, List, Union
 
 from bpy.types import Context, Sequence, Sequences
@@ -36,3 +37,8 @@ def _datetime_str():
 
 def _current_frame(context: Context) -> int:
   return context.scene.frame_current
+
+
+def trim_bracketed_sentence(text: str) -> str:
+  expr = re.compile(r'\([^)]+\)')
+  return expr.sub('', text)

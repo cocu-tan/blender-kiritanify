@@ -1,11 +1,11 @@
 from pathlib import Path
+from typing import Optional
 
 import bpy
 from bpy.types import Context
-from typing import Optional
 
 from .types import KiritanifyScriptSequence, SoundSequence
-from .utils import _datetime_str, _seq_setting, _sequences_all
+from .utils import _datetime_str, _seq_setting, _sequences_all, trim_bracketed_sentence
 
 
 class CaptionStyle(bpy.types.PropertyGroup):
@@ -207,16 +207,19 @@ class KiritanifyScriptSequenceSetting(bpy.types.PropertyGroup):
   custom_voice_text: bpy.props.StringProperty(name='custom voice text')
   use_custom_caption_style: bpy.props.BoolProperty(name='use custom property')
   custom_caption_style: bpy.props.PointerProperty(type=CaptionStyle, name='caption style')
-  
+
   # seq reference
   voice_seq_name: bpy.props.StringProperty(name='Voice seq name')
-  
-  # cache
-  voice_cache_state : bpy.props.PointerProperty(name='voice cache state', type=VoiceCacheState)
-  caption_cache_state : bpy.props.PointerProperty(name='caption cache state', type=CaptionCacheState)
 
+  # cache
+  voice_cache_state: bpy.props.PointerProperty(name='voice cache state', type=VoiceCacheState)
+  caption_cache_state: bpy.props.PointerProperty(name='caption cache state', type=CaptionCacheState)
 
   def voice_text(self) -> str:
+    script = self.raw_voice_text()
+    return trim_bracketed_sentence(script.replace('\\n', ''))
+
+  def raw_voice_text(self) -> str:
     if self.use_custom_voice_text:
       return self.custom_voice_text
     return self.text
@@ -276,7 +279,7 @@ class KiritanifyCharacterSetting(bpy.types.PropertyGroup):
     return global_setting.start_channel_for_scripts + 2 * idx + 1
 
 
-class SeikaServerSetting(bpy.types.PropertyGroup):
+class SeikaCenterSetting(bpy.types.PropertyGroup):
   addr: bpy.props.StringProperty(name='SeikaCenter Addr', default='http://192.168.88.7:7180')
   user: bpy.props.StringProperty(name='User name', default='SeikaServerUser')
   password: bpy.props.StringProperty(name='Password', default='SeikaServerPassword')
@@ -285,10 +288,12 @@ class SeikaServerSetting(bpy.types.PropertyGroup):
 class KiritanifyGlobalSetting(bpy.types.PropertyGroup):
   name = "kiritanify.global_setting"
 
-  seika_server: bpy.props.PointerProperty(type=SeikaServerSetting)
+  seika_server: bpy.props.PointerProperty(type=SeikaCenterSetting)
 
   start_channel_for_scripts: bpy.props.IntProperty('Script start channel', min=1, default=20)
   characters: bpy.props.CollectionProperty(type=KiritanifyCharacterSetting)
+
+  cache_setting: bpy.props.PointerProperty(type=KiritanifyCacheSetting, name='cache setting')
 
   def character_index(
       self,
