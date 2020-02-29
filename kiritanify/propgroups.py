@@ -162,7 +162,7 @@ class VoiceCacheState(bpy.types.PropertyGroup, ICacheState):
 
   def is_changed(
       self,
-      context: Context,
+      global_setting: 'KiritanifyGlobalSetting',
       chara: 'KiritanifyCharacterSetting',
       seq: KiritanifyScriptSequence,
   ) -> bool:
@@ -171,7 +171,7 @@ class VoiceCacheState(bpy.types.PropertyGroup, ICacheState):
 
     _setting = _seq_setting(seq)
     text = _setting.voice_text()
-    style = _setting.voice_style(context, chara)
+    style = _setting.voice_style(global_setting, chara)
 
     return not (
         self.style.is_equal(style)
@@ -202,13 +202,19 @@ class KiritanifyScriptSequenceSetting(bpy.types.PropertyGroup):
 
   text: bpy.props.StringProperty(name='text')
 
+  # custom
   use_custom_voice_text: bpy.props.BoolProperty(name='use custom voice text')
   custom_voice_text: bpy.props.StringProperty(name='custom voice text')
-
   use_custom_caption_style: bpy.props.BoolProperty(name='use custom property')
   custom_caption_style: bpy.props.PointerProperty(type=CaptionStyle, name='caption style')
-
+  
+  # seq reference
   voice_seq_name: bpy.props.StringProperty(name='Voice seq name')
+  
+  # cache
+  voice_cache_state : bpy.props.PointerProperty(name='voice cache state', type=VoiceCacheState)
+  caption_cache_state : bpy.props.PointerProperty(name='caption cache state', type=CaptionCacheState)
+
 
   def voice_text(self) -> str:
     if self.use_custom_voice_text:
