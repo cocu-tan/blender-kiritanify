@@ -2,9 +2,10 @@ from pathlib import Path
 
 import bpy
 from bpy.types import Context
+from typing import Optional
 
-from .types import KiritanifyScriptSequence
-from .utils import _datetime_str, _seq_setting
+from .types import KiritanifyScriptSequence, SoundSequence
+from .utils import _datetime_str, _seq_setting, _sequences_all
 
 
 class CaptionStyle(bpy.types.PropertyGroup):
@@ -232,6 +233,11 @@ class KiritanifyScriptSequenceSetting(bpy.types.PropertyGroup):
     if self.use_custom_caption_style:
       return self.custom_caption_style
     return chara.caption_style
+
+  def find_voice_seq(self, context: Context) -> Optional[SoundSequence]:
+    if self.voice_seq_name == '' or self.voice_seq_name not in _sequences_all(context):
+      return None
+    return _sequences_all(context)[self.voice_seq_name]
 
 
 class KiritanifyCharacterSetting(bpy.types.PropertyGroup):
