@@ -248,6 +248,20 @@ class KiritanifyCharacterSetting(bpy.types.PropertyGroup):
   def __repr__(self):
     return f'<KiritanifyCharacterSetting chara_name={self.chara_name} cid={self.cid}>'
 
+  def caption_channel(
+      self,
+      global_setting: 'KiritanifyGlobalSetting',
+  ) -> int:
+    idx = global_setting.character_index(self)
+    return global_setting.start_channel_for_scripts + 2 * idx + 0
+
+  def voice_channel(
+      self,
+      global_setting: 'KiritanifyGlobalSetting',
+  ) -> int:
+    idx = global_setting.character_index(self)
+    return global_setting.start_channel_for_scripts + 2 * idx + 1
+
 
 class SeikaServerSetting(bpy.types.PropertyGroup):
   addr: bpy.props.StringProperty(name='SeikaCenter Addr', default='http://192.168.88.7:7180')

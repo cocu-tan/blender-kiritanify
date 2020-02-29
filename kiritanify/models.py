@@ -4,7 +4,6 @@ from bpy.types import Context
 
 from kiritanify.propgroups import KiritanifyCharacterSetting
 from kiritanify.types import KiritanifyScriptSequence, SoundSequence
-from kiritanify.utils import _global_setting
 
 
 class CharacterScript:
@@ -45,13 +44,3 @@ class CharacterScript:
       voice_seq=None,  # TODO: write find voice seq procedure
       context=context,
     )
-
-  def channel_for_caption(self) -> int:
-    setting = _global_setting(self.context)
-    idx = setting.character_index(self.chara)
-    return setting.start_channel_for_scripts + idx * 2 + 0
-
-  def channel_for_voice(self) -> int:
-    setting = _global_setting(self.context)
-    idx = setting.character_index(self.chara)
-    return setting.start_channel_for_scripts + idx * 2 + 1
