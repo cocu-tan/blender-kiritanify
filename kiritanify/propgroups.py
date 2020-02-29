@@ -260,7 +260,7 @@ class KiritanifyGlobalSetting(bpy.types.PropertyGroup):
 
   seika_server: bpy.props.PointerProperty(type=SeikaServerSetting)
 
-  start_channel_for_scripts: bpy.props.IntProperty('Script start channel', min=1, default=10)
+  start_channel_for_scripts: bpy.props.IntProperty('Script start channel', min=1, default=20)
   characters: bpy.props.CollectionProperty(type=KiritanifyCharacterSetting)
 
   def character_index(
