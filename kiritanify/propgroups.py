@@ -325,7 +325,7 @@ class KiritanifyGlobalSetting(bpy.types.PropertyGroup):
   seika_server: bpy.props.PointerProperty(type=SeikaCenterSetting)
 
   start_channel_for_script: bpy.props.IntProperty('Script start channel', min=1, default=10)
-  start_channel_for_caption: bpy.props.IntProperty('Script start channel', min=1, default=20)
+  start_channel_for_caption: bpy.props.IntProperty('Script start channel', min=1, default=30)
   characters: bpy.props.CollectionProperty(type=KiritanifyCharacterSetting)
 
   cache_setting: bpy.props.PointerProperty(type=KiritanifyCacheSetting, name='cache setting')
