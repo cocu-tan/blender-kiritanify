@@ -1,36 +1,26 @@
-from typing import Optional, Union
+from typing import Optional
 
 import bpy
-from bpy.types import Context, ImageSequence, Sequence, UILayout
+from bpy.types import Context, UILayout
 
 from kiritanify.ops import (
-  KIRITANIFY_OT_NewScriptSequence,
-  KIRITANIFY_OT_RunKiritanifyForScripts,
-  KIRITANIFY_OT_ToggleRamCaching,
+  KIRITANIFY_OT_NewScriptSequence, KIRITANIFY_OT_RunKiritanifyForScripts, KIRITANIFY_OT_SetDefaultCharacters,
+  KIRITANIFY_OT_ToggleRamCaching
 )
-from kiritanify.propgroups import KiritanifyCharacterSetting, KiritanifyScriptSequenceSetting, _global_setting, \
-  _seq_setting
+from kiritanify.propgroups import (
+  KiritanifyCharacterSetting,
+  KiritanifyScriptSequenceSetting,
+  _global_setting,
+  _seq_setting,
+  get_selected_script_sequence,
+)
 from kiritanify.types import KiritanifyScriptSequence
-
-
-def get_selected_script_sequence(context: Context) -> Optional[KiritanifyScriptSequence]:
-  global_setting = _global_setting(context)
-  channels = set([
-    chara.caption_channel(global_setting)
-    for chara in global_setting.characters  # type: KiritanifyCharacterSetting
-  ])
-  for seq in context.selected_sequences:  # type: Union[Sequence, ImageSequence]
-    if not isinstance(seq, ImageSequence):
-      continue
-    if not seq.channel in channels:
-      continue
-    return seq
 
 
 def get_character_from_channel(context, channel) -> KiritanifyCharacterSetting:
   global_channel = _global_setting(context)
   for chara in global_channel.characters:  # type: KiritanifyCharacterSetting
-    if channel == chara.caption_channel(global_channel):
+    if channel == chara.script_channel(global_channel):
       return chara
 
 
@@ -43,34 +33,35 @@ class KIRITANIFY_PT_KiritanifyPanel(bpy.types.Panel):
 
   def draw(self, context: Context):
     layout = self.layout
+    gs = _global_setting(context)
 
-    layout.operator(KIRITANIFY_OT_RunKiritanifyForScripts.bl_idname, text="Run Kiritanify for Scripts")
-
-    layout.separator()
-    for chara in _global_setting(context).characters:  # type: KiritanifyCharacterSetting
-      op: KIRITANIFY_OT_NewScriptSequence \
-        = layout.operator(
-        operator=KIRITANIFY_OT_NewScriptSequence.bl_idname,
-        text=f'NewScript: {chara.chara_name}',
-      )
-      op.character_name = chara.name
-
-    layout.separator()
-
-    self._draw_ui_for_text_settings(context, layout)
-
-    layout.separator()
+    _row = layout.row()
+    _row.operator(KIRITANIFY_OT_RunKiritanifyForScripts.bl_idname, text="Run Kiritanify for Scripts")
     _row = layout.row()
     _row.operator(KIRITANIFY_OT_ToggleRamCaching.bl_idname, text="ToggleRamCache")
 
+    layout.separator()
+    _row = layout.row()
+    for chara in gs.characters:  # type: KiritanifyCharacterSetting
+      op: KIRITANIFY_OT_NewScriptSequence \
+        = _row.operator(
+        operator=KIRITANIFY_OT_NewScriptSequence.bl_idname,
+        text=f'{chara.chara_name}',
+      )
+      op.character_name = chara.chara_name
+
+    layout.separator()
+
+    self._draw_ui_for_seq_settings(context, layout)
+
   @staticmethod
-  def _draw_ui_for_text_settings(context: Context, layout: UILayout):
+  def _draw_ui_for_seq_settings(context: Context, layout: UILayout):
     seq: Optional[KiritanifyScriptSequence] = get_selected_script_sequence(context)
     if seq is None:
       return
     setting: KiritanifyScriptSequenceSetting = _seq_setting(seq)
 
-    layout.prop(seq, "text")
+    layout.prop(setting, "text")
     layout.label(text=f"Chara: {get_character_from_channel(context, seq.channel).chara_name}")
 
     row = layout.row()
@@ -79,6 +70,57 @@ class KIRITANIFY_PT_KiritanifyPanel(bpy.types.Panel):
       row.prop(setting, "voice_seq_name", text="", emboss=False)
 
 
+class KIRITANIFY_PT_KiritanifyGlobalSettingPanel(bpy.types.Panel):
+  """Kiritanify global setting panel"""
+  bl_space_type = 'SEQUENCE_EDITOR'
+  bl_region_type = 'UI'
+  bl_label = 'KiritanifyGlobalSetting'
+  bl_category = 'Kiritanify'
+
+  def draw(self, context):
+    layout = self.layout
+    gs = _global_setting(context)
+
+    row = layout.row()
+    row.label(text="Character:")
+    row.operator(KIRITANIFY_OT_SetDefaultCharacters.bl_idname)
+    for chara in gs.characters:  # type: KiritanifyCharacterSetting
+      box = layout.box()
+      col = box.column(align=True)
+      col.prop(chara, "chara_name")
+      col.prop(chara, "cid", slider=False)
+
+      col.separator()
+      _row = col.row()
+      _row.prop(chara.caption_style, "fill_color")
+      _row = col.row()
+      _row.prop(chara.caption_style, "stroke_color")
+      _row.prop(chara.caption_style, "stroke_width", slider=False)
+
+      col.separator()
+      _row = col.row()
+      _row.label(text="Channel")
+      _row.label(text=f'Sct: {chara.script_channel(gs)}')
+      _row.label(text=f'Cap: {chara.caption_channel(gs)}')
+      _row.label(text=f'Voi: {chara.voice_channel(gs)}')
+      _row.label(text=f'Tac: {0}')
+
+      col.separator()
+      _row = col.row()
+      _row.label(text="TachieOffset")
+      _row.prop(chara.tachie_style, property="offset_x_px", text="x", slider=False)
+      _row.prop(chara.tachie_style, property="offset_y_px", text="y", slider=False)
+      _row.prop(chara.tachie_style, property="use_flip_x", text="flip")
+
+      col.separator()
+      _row = col.row()
+      _row.prop(chara.voice_style, 'volume', slider=False)
+      _row.prop(chara.voice_style, 'speed', slider=False)
+      _row.prop(chara.voice_style, 'pitch', slider=False)
+      _row.prop(chara.voice_style, 'intonation', slider=False)
+
+
 PANEL_CLASSES = [
   KIRITANIFY_PT_KiritanifyPanel,
+  KIRITANIFY_PT_KiritanifyGlobalSettingPanel,
 ]
