@@ -82,6 +82,11 @@ class KIRITANIFY_PT_KiritanifyGlobalSettingPanel(bpy.types.Panel):
     gs = _global_setting(context)
 
     row = layout.row()
+    row.label(text="FromChan:")
+    row.prop(gs, 'start_channel_for_script', slider=False, text='Script')
+    row.prop(gs, 'start_channel_for_caption', slider=False, text='Caption')
+
+    row = layout.row()
     row.label(text="Character:")
     row.operator(KIRITANIFY_OT_SetDefaultCharacters.bl_idname)
     for chara in gs.characters:  # type: KiritanifyCharacterSetting
@@ -99,11 +104,10 @@ class KIRITANIFY_PT_KiritanifyGlobalSettingPanel(bpy.types.Panel):
 
       col.separator()
       _row = col.row()
-      _row.label(text="Channel")
-      _row.label(text=f'Sct: {chara.script_channel(gs)}')
-      _row.label(text=f'Cap: {chara.caption_channel(gs)}')
-      _row.label(text=f'Voi: {chara.voice_channel(gs)}')
-      _row.label(text=f'Tac: {0}')
+      _row.label(text=f'Sc: {chara.script_channel(gs)}')
+      _row.label(text=f'Cp: {chara.caption_channel(gs)}')
+      _row.label(text=f'Vo: {chara.voice_channel(gs)}')
+      _row.label(text=f'Ta: {0}')
 
       col.separator()
       _row = col.row()
