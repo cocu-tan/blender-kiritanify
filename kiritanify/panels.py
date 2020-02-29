@@ -4,8 +4,8 @@ import bpy
 from bpy.types import Context, UILayout
 
 from kiritanify.ops import (
-  KIRITANIFY_OT_NewScriptSequence, KIRITANIFY_OT_RunKiritanifyForScripts, KIRITANIFY_OT_SetDefaultCharacters,
-  KIRITANIFY_OT_ToggleRamCaching
+  KIRITANIFY_OT_AddCharacter, KIRITANIFY_OT_NewScriptSequence, KIRITANIFY_OT_RunKiritanifyForScripts,
+  KIRITANIFY_OT_SetDefaultCharacters, KIRITANIFY_OT_ToggleRamCaching
 )
 from kiritanify.propgroups import (
   KiritanifyCharacterSetting,
@@ -88,7 +88,8 @@ class KIRITANIFY_PT_KiritanifyGlobalSettingPanel(bpy.types.Panel):
 
     row = layout.row()
     row.label(text="Character:")
-    row.operator(KIRITANIFY_OT_SetDefaultCharacters.bl_idname)
+    row.operator(KIRITANIFY_OT_AddCharacter.bl_idname, text='AddChara')
+    row.operator(KIRITANIFY_OT_SetDefaultCharacters.bl_idname, text='UseDefault')
     for chara in gs.characters:  # type: KiritanifyCharacterSetting
       box = layout.box()
       col = box.column(align=True)
