@@ -197,8 +197,11 @@ class KiritanifyCacheSetting(bpy.types.PropertyGroup):
     dir_path = self._gen_dir('caption', chara)
     return dir_path / f'{_datetime_str()}.png'
 
+  def root_dir(self) -> Path:
+    return Path(bpy.path.abspath('//kiritanify'))
+
   def _gen_dir(self, data_type: str, chara: 'KiritanifyCharacterSetting') -> Path:
-    abspath = bpy.path.abspath(f'//{data_type}/{chara.chara_name}')
+    abspath = bpy.path.abspath(f'//kiritanify/{data_type}/{chara.chara_name}')
     path = Path(abspath)
     path.mkdir(parents=True, exist_ok=True)
     return path

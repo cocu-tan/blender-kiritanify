@@ -1,8 +1,9 @@
 import logging
-from typing import Dict, Optional, Set, Union
+from pathlib import Path
+from typing import Dict, List, Optional, Set, Union
 
 import bpy
-from bpy.types import AdjustmentSequence, Context, SoundSequence
+from bpy.types import AdjustmentSequence, Context, ImageSequence, Sequence, SoundSequence
 
 import kiritanify.types
 from kiritanify.models import CharacterScript
@@ -127,10 +128,51 @@ class KIRITANIFY_OT_ToggleRamCaching(bpy.types.Operator):
     return {'FINISHED'}
 
 
+class KIRITANIFY_OT_RemoveCacheFiles(bpy.types.Operator):
+  bl_idname = 'kiritanify.remove_cache_files'
+  bl_label = 'Clear caches'
+
+  def execute(self, context):
+    referred_files: Set[Path] = set(sum(map(
+      self.get_paths_from,
+      _sequences(context)
+    ), []))
+
+    path = _global_setting(context).cache_setting.root_dir()
+    png_paths = set(p.resolve() for p in path.glob('caption/*/*.png'))
+    ogg_paths = set(p.resolve() for p in path.glob('voice/*/*.ogg'))
+    existing_paths = png_paths.union(ogg_paths)
+    logger.debug(f'referred_files: {referred_files}')
+    logger.debug(f'existing_files: {existing_paths}')
+
+    deletable_paths = existing_paths - referred_files
+    for path in deletable_paths:  # type: Path
+      path.unlink()
+
+    return {'FINISHED'}
+
+  def get_paths_from(self, seq: Sequence) -> List[Path]:
+    if isinstance(seq, ImageSequence):
+      return [
+        Path(bpy.path.abspath(f'{seq.directory}/{elem.filename}'))
+        for elem in seq.elements  # type: SequenceElement
+      ]
+    elif isinstance(seq, SoundSequence):
+      return [
+        Path(bpy.path.abspath(seq.sound.filepath))
+      ]
+    elif isinstance(seq, AdjustmentSequence):
+      return []
+    else:
+      logger.debug(f'RemoveCacheFiles: unexpected seq{seq}')
+      return []
+
+
 OP_CLASSES = [
   KIRITANIFY_OT_RunKiritanifyForScripts,
   KIRITANIFY_OT_NewScriptSequence,
   KIRITANIFY_OT_AddCharacter,
   KIRITANIFY_OT_SetDefaultCharacters,
   KIRITANIFY_OT_ToggleRamCaching,
+  KIRITANIFY_OT_RemoveCacheFiles,
 ]

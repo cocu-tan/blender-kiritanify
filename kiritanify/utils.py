@@ -25,6 +25,14 @@ def _current_frame(context: Context) -> int:
   return context.scene.frame_current
 
 
+def get_sequences_by_channel(context: Context, channel: int) -> List[Sequence]:
+  return [
+    seq
+    for seq in _sequences(context)
+    if seq.channel == channel
+  ]
+
+
 def trim_bracketed_sentence(text: str) -> str:
   expr = re.compile(r'\([^)]+\)')
   return expr.sub('', text)

@@ -4,8 +4,8 @@ import bpy
 from bpy.types import Context, UILayout
 
 from kiritanify.ops import (
-  KIRITANIFY_OT_AddCharacter, KIRITANIFY_OT_NewScriptSequence, KIRITANIFY_OT_RunKiritanifyForScripts,
-  KIRITANIFY_OT_SetDefaultCharacters, KIRITANIFY_OT_ToggleRamCaching
+  KIRITANIFY_OT_AddCharacter, KIRITANIFY_OT_NewScriptSequence, KIRITANIFY_OT_RemoveCacheFiles,
+  KIRITANIFY_OT_RunKiritanifyForScripts, KIRITANIFY_OT_SetDefaultCharacters, KIRITANIFY_OT_ToggleRamCaching
 )
 from kiritanify.propgroups import (
   KiritanifyCharacterSetting,
@@ -39,6 +39,7 @@ class KIRITANIFY_PT_KiritanifyPanel(bpy.types.Panel):
     _row.operator(KIRITANIFY_OT_RunKiritanifyForScripts.bl_idname, text="Run Kiritanify for Scripts")
     _row = layout.row()
     _row.operator(KIRITANIFY_OT_ToggleRamCaching.bl_idname, text="ToggleRamCache")
+    _row.operator(KIRITANIFY_OT_RemoveCacheFiles.bl_idname, text="RemoveCacheFiles")
 
     layout.separator()
     _row = layout.row()
