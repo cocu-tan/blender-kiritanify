@@ -208,6 +208,8 @@ class KiritanifyScriptSequenceSetting(bpy.types.PropertyGroup):
   use_custom_caption_style: bpy.props.BoolProperty(name='use custom property')
   custom_caption_style: bpy.props.PointerProperty(type=CaptionStyle, name='caption style')
 
+  voice_seq_name: bpy.props.StringProperty(name='Voice seq name')
+
   def voice_text(self) -> str:
     if self.use_custom_voice_text:
       return self.custom_voice_text
