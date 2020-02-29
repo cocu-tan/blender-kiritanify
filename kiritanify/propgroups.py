@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Optional
 
 import bpy
-from bpy.types import Context
+from bpy.types import AdjustmentSequence, Context
 
 from .types import KiritanifyScriptSequence, SoundSequence
 from .utils import _datetime_str, _sequences_all, trim_bracketed_sentence
@@ -202,13 +202,13 @@ class KiritanifyScriptSequenceSetting(bpy.types.PropertyGroup):
 
   text: bpy.props.StringProperty(name='text')
 
-  gen_voice: bpy.props.BoolProperty(name='gen voice')
-  gen_caption: bpy.props.BoolProperty(name='gen caption')
+  gen_voice: bpy.props.BoolProperty(name='gen voice', default=True)
+  gen_caption: bpy.props.BoolProperty(name='gen caption', default=True)
 
   # custom
-  use_custom_voice_text: bpy.props.BoolProperty(name='use custom voice text')
+  use_custom_voice_text: bpy.props.BoolProperty(name='use custom voice text', default=False)
   custom_voice_text: bpy.props.StringProperty(name='custom voice text')
-  use_custom_caption_style: bpy.props.BoolProperty(name='use custom property')
+  use_custom_caption_style: bpy.props.BoolProperty(name='use custom property', default=False)
   custom_caption_style: bpy.props.PointerProperty(type=CaptionStyle, name='caption style')
 
   # seq reference
@@ -272,17 +272,26 @@ class KiritanifyCharacterSetting(bpy.types.PropertyGroup):
       global_setting: 'KiritanifyGlobalSetting',
   ) -> int:
     idx = global_setting.character_index(self)
-    return global_setting.start_channel_for_scripts + 2 * idx + 0
+    return global_setting.start_channel_for_caption + 1 * idx
+
+  def script_channel(
+      self,
+      global_setting: 'KiritanifyGlobalSetting',
+  ) -> int:
+    idx = global_setting.character_index(self)
+    return global_setting.start_channel_for_script + 2 * idx + 0
 
   def voice_channel(
       self,
       global_setting: 'KiritanifyGlobalSetting',
   ) -> int:
     idx = global_setting.character_index(self)
-    return global_setting.start_channel_for_scripts + 2 * idx + 1
+    return global_setting.start_channel_for_script + 2 * idx + 1
 
 
 class SeikaCenterSetting(bpy.types.PropertyGroup):
+  name = "kiritanify.seika_center_setting"
+
   addr: bpy.props.StringProperty(name='SeikaCenter Addr', default='http://192.168.88.7:7180')
   user: bpy.props.StringProperty(name='User name', default='SeikaServerUser')
   password: bpy.props.StringProperty(name='Password', default='SeikaServerPassword')
@@ -302,7 +311,8 @@ class KiritanifyGlobalSetting(bpy.types.PropertyGroup):
 
   seika_server: bpy.props.PointerProperty(type=SeikaCenterSetting)
 
-  start_channel_for_scripts: bpy.props.IntProperty('Script start channel', min=1, default=20)
+  start_channel_for_script: bpy.props.IntProperty('Script start channel', min=1, default=10)
+  start_channel_for_caption: bpy.props.IntProperty('Script start channel', min=1, default=20)
   characters: bpy.props.CollectionProperty(type=KiritanifyCharacterSetting)
 
   cache_setting: bpy.props.PointerProperty(type=KiritanifyCacheSetting, name='cache setting')
@@ -325,6 +335,7 @@ PROPGROUP_CLASSES = [
   VoiceStyle,
   CaptionCacheState,
   VoiceCacheState,
+  SeikaCenterSetting,
   KiritanifyCacheSetting,
   KiritanifyScriptSequenceSetting,
   KiritanifyCharacterSetting,
@@ -338,3 +349,17 @@ def _global_setting(context: Context) -> KiritanifyGlobalSetting:
 
 def _seq_setting(seq: KiritanifyScriptSequence) -> KiritanifyScriptSequenceSetting:
   return seq.kiritanify
+
+
+def get_selected_script_sequence(context: Context) -> Optional[KiritanifyScriptSequence]:
+  global_setting = _global_setting(context)
+  channels = set([
+    chara.script_channel(global_setting)
+    for chara in global_setting.characters  # type: KiritanifyCharacterSetting
+  ])
+  for seq in context.selected_sequences:  # type: Union[Sequence, ImageSequence]
+    if not isinstance(seq, AdjustmentSequence):
+      continue
+    if not seq.channel in channels:
+      continue
+    return seq

@@ -28,7 +28,7 @@ def register():
   for cls in CLASSES:
     bpy.utils.register_class(cls)
 
-  bpy.types.ImageSequence.kiritanify = bpy.props.PointerProperty(
+  bpy.types.AdjustmentSequence.kiritanify = bpy.props.PointerProperty(
     name="Kiritanify Settings",
     type=KiritanifyScriptSequenceSetting,
   )
