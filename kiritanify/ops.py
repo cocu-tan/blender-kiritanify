@@ -5,8 +5,7 @@ from bpy.types import Context, ImageSequence, SoundSequence
 
 import kiritanify.types
 from kiritanify.models import CharacterScript
-from kiritanify.propgroup_utils import _global_setting
-from kiritanify.propgroups import KiritanifyCharacterSetting
+from kiritanify.propgroups import KiritanifyCharacterSetting, _global_setting
 from kiritanify.utils import _current_frame, _datetime_str, _sequences
 
 

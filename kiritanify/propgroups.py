@@ -4,7 +4,6 @@ from typing import Optional
 import bpy
 from bpy.types import Context
 
-from .propgroup_utils import _seq_setting
 from .types import KiritanifyScriptSequence, SoundSequence
 from .utils import _datetime_str, _sequences_all, trim_bracketed_sentence
 
@@ -331,3 +330,11 @@ PROPGROUP_CLASSES = [
   KiritanifyCharacterSetting,
   KiritanifyGlobalSetting,
 ]
+
+
+def _global_setting(context: Context) -> KiritanifyGlobalSetting:
+  return context.scene.kiritanify
+
+
+def _seq_setting(seq: KiritanifyScriptSequence) -> KiritanifyScriptSequenceSetting:
+  return seq.kiritanify

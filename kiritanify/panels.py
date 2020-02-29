@@ -3,11 +3,13 @@ from typing import Optional, Union
 import bpy
 from bpy.types import Context, ImageSequence, Sequence, UILayout
 
-from kiritanify import KiritanifyScriptSequenceSetting
-from kiritanify.ops import KIRITANIFY_OT_NewScriptSequence, KIRITANIFY_OT_RunKiritanifyForScripts, \
-  KIRITANIFY_OT_ToggleRamCaching
-from kiritanify.propgroup_utils import _global_setting, _seq_setting
-from kiritanify.propgroups import KiritanifyCharacterSetting
+from kiritanify.ops import (
+  KIRITANIFY_OT_NewScriptSequence,
+  KIRITANIFY_OT_RunKiritanifyForScripts,
+  KIRITANIFY_OT_ToggleRamCaching,
+)
+from kiritanify.propgroups import KiritanifyCharacterSetting, KiritanifyScriptSequenceSetting, _global_setting, \
+  _seq_setting
 from kiritanify.types import KiritanifyScriptSequence
 
 
