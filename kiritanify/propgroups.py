@@ -4,8 +4,8 @@ from typing import Optional
 import bpy
 from bpy.types import AdjustmentSequence, Context
 
-from .types import KiritanifyScriptSequence, SoundSequence
-from .utils import _datetime_str, _sequences_all, trim_bracketed_sentence
+from kiritanify.types import KiritanifyScriptSequence, SoundSequence
+from kiritanify.utils import _datetime_str, _sequences_all, trim_bracketed_sentence
 
 
 class CaptionStyle(bpy.types.PropertyGroup):

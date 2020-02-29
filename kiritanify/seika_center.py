@@ -6,7 +6,7 @@ import pydub
 import requests
 from pydub import AudioSegment
 
-from .propgroups import KiritanifyCharacterSetting, SeikaCenterSetting, VoiceStyle
+from kiritanify.propgroups import KiritanifyCharacterSetting, SeikaCenterSetting, VoiceStyle
 
 
 def synthesize_voice(
