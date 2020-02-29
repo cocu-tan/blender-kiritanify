@@ -5,7 +5,8 @@ from bpy.types import Context, UILayout
 
 from kiritanify.ops import (
   KIRITANIFY_OT_AddCharacter, KIRITANIFY_OT_NewScriptSequence, KIRITANIFY_OT_RemoveCacheFiles,
-  KIRITANIFY_OT_RunKiritanifyForScripts, KIRITANIFY_OT_SetDefaultCharacters, KIRITANIFY_OT_ToggleRamCaching
+  KIRITANIFY_OT_RemoveCharacter, KIRITANIFY_OT_RunKiritanifyForScripts, KIRITANIFY_OT_SetDefaultCharacters,
+  KIRITANIFY_OT_ToggleRamCaching
 )
 from kiritanify.propgroups import (
   KiritanifyCharacterSetting,
@@ -95,7 +96,11 @@ class KIRITANIFY_PT_KiritanifyGlobalSettingPanel(bpy.types.Panel):
       box = layout.box()
       col = box.column(align=True)
       col.prop(chara, "chara_name")
-      col.prop(chara, "cid", slider=False)
+
+      _row = col.row()
+      _row.prop(chara, "cid", slider=False)
+      op = _row.operator(KIRITANIFY_OT_RemoveCharacter.bl_idname, text='', icon='X')
+      op.chara_name = chara.chara_name
 
       col.separator()
       _row = col.row()

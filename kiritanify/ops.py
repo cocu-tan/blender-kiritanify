@@ -80,7 +80,23 @@ class KIRITANIFY_OT_AddCharacter(bpy.types.Operator):
 
   def execute(self, context):
     charas = _global_setting(context).characters
-    charas.add()
+    c: KiritanifyCharacterSetting = charas.add()
+    c.chara_name = 'XYZ'
+    return {'FINISHED'}
+
+
+class KIRITANIFY_OT_RemoveCharacter(bpy.types.Operator):
+  bl_idname = 'kiritanify.remove_character'
+  bl_label = 'RemoveCharacter'
+
+  chara_name: bpy.props.StringProperty('Character name')
+
+  def execute(self, context):
+    charas = _global_setting(context).characters
+    for idx, chara in enumerate(charas):
+      if chara.chara_name == self.chara_name:
+        charas.remove(idx)
+        break
     return {'FINISHED'}
 
 
@@ -172,6 +188,7 @@ OP_CLASSES = [
   KIRITANIFY_OT_RunKiritanifyForScripts,
   KIRITANIFY_OT_NewScriptSequence,
   KIRITANIFY_OT_AddCharacter,
+  KIRITANIFY_OT_RemoveCharacter,
   KIRITANIFY_OT_SetDefaultCharacters,
   KIRITANIFY_OT_ToggleRamCaching,
   KIRITANIFY_OT_RemoveCacheFiles,
