@@ -2,7 +2,6 @@ from pathlib import Path
 
 import bpy
 from bpy.types import Context
-from typing import Optional
 
 from .types import KiritanifyScriptSequence
 from .utils import _datetime_str, _seq_setting
