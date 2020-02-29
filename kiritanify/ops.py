@@ -1,6 +1,6 @@
-import bpy
-from typing import Union, Set, Dict
+from typing import Dict, Set, Union
 
+import bpy
 from bpy.types import Context, ImageSequence
 
 import kiritanify.types
@@ -32,4 +32,6 @@ class KIRITANIFY_OT_RunKiritanifyForScripts(bpy.types.Operator):
     return {'FINISHED'}
 
 
-OPS_CLASSES = []
+OPS_CLASSES = [
+  KIRITANIFY_OT_RunKiritanifyForScripts,
+]
