@@ -107,20 +107,20 @@ class CaptionCacheState(bpy.types.PropertyGroup, ICacheState):
 
   def update(
       self,
-      context: Context,
+      global_setting: 'KiritanifyGlobalSetting',
       chara: 'KiritanifyCharacterSetting',
       seq: KiritanifyScriptSequence,
   ) -> None:
     _setting = _seq_setting(seq)
     text = _setting.caption_text()
-    style = _setting.caption_style(context, chara)
+    style = _setting.caption_style(global_setting, chara)
     self.invalid = False
     self.text = text
     self.style.update(style)
 
   def is_changed(
       self,
-      context: Context,
+      global_setting: 'KiritanifyGlobalSetting',
       chara: 'KiritanifyCharacterSetting',
       seq: KiritanifyScriptSequence,
   ) -> bool:
@@ -129,7 +129,7 @@ class CaptionCacheState(bpy.types.PropertyGroup, ICacheState):
 
     _setting = _seq_setting(seq)
     text = _setting.caption_text()
-    style = _setting.caption_style(context, chara)
+    style = _setting.caption_style(global_setting, chara)
     return not (
         self.style.is_equal(style)
         and self.text == text
@@ -149,13 +149,13 @@ class VoiceCacheState(bpy.types.PropertyGroup, ICacheState):
 
   def update(
       self,
-      context: Context,
+      global_setting: 'KiritanifyGlobalSetting',
       chara: 'KiritanifyCharacterSetting',
       seq: KiritanifyScriptSequence,
   ) -> None:
     _setting = _seq_setting(seq)
     text = _setting.voice_text()
-    style = _setting.voice_style(context, chara)
+    style = _setting.voice_style(global_setting, chara)
     self.invalid = False
     self.text = text
     self.style.update(style)
@@ -215,7 +215,7 @@ class KiritanifySequenceSetting(bpy.types.PropertyGroup):
 
   def voice_style(
       self,
-      context: Context,
+      global_setting: 'KiritanifyGlobalSetting',
       chara: 'KiritanifyCharacterSetting',
   ) -> VoiceStyle:
     return chara.voice_style
@@ -225,7 +225,7 @@ class KiritanifySequenceSetting(bpy.types.PropertyGroup):
 
   def caption_style(
       self,
-      context: Context,
+      global_setting: 'KiritanifyGlobalSetting',
       chara: 'KiritanifyCharacterSetting',
   ) -> CaptionStyle:
     if self.use_custom_caption_style:
