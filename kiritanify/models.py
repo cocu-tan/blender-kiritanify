@@ -51,8 +51,11 @@ class CharacterScript:
     )
 
   def maybe_update_voice(self):
-    should_regenerate: bool = _seq_setting(self.seq) \
-      .voice_cache_state.is_changed(
+    ss = _seq_setting(self.seq)
+    if not ss.gen_voice:
+      return
+
+    should_regenerate: bool = ss.voice_cache_state.is_changed(
       global_setting=_global_setting(self.context),
       chara=self.chara,
       seq=self.seq,
@@ -106,6 +109,10 @@ class CharacterScript:
     return base64encoded[:16]
 
   def maybe_update_caption(self):
+    ss = _seq_setting(self.seq)
+    if not ss.gen_caption:
+      return
+
     should_regenerate: bool = _seq_setting(self.seq) \
       .caption_cache_state.is_changed(_global_setting(self.context), self.chara, self.seq)
 
