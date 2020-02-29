@@ -63,6 +63,7 @@ class CharacterScript:
         self._remove_sequence(self.voice_seq)
         self.voice_seq = None
       self.voice_seq = self._generate_voice_sequence()
+      self._seq_setting.voice_seq_name = self.voice_seq.name
       self._seq_setting.voice_cache_state.update(
         global_setting=_global_setting(self.context),
         chara=self.chara,

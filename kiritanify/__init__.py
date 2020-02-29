@@ -1,7 +1,8 @@
 import bpy
 
-from .ops import OPS_CLASSES
-from .propgroups import (
+from kiritanify.ops import OP_CLASSES
+from kiritanify.panels import PANEL_CLASSES
+from kiritanify.propgroups import (
   KiritanifyGlobalSetting,
   KiritanifyScriptSequenceSetting,
   PROPGROUP_CLASSES,
@@ -18,7 +19,8 @@ bl_info = {
 
 CLASSES = (
     PROPGROUP_CLASSES
-    + OPS_CLASSES
+    + OP_CLASSES
+    + PANEL_CLASSES
 )
 
 

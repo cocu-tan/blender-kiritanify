@@ -7,7 +7,7 @@ import kiritanify.types
 from kiritanify.models import CharacterScript
 from kiritanify.propgroup_utils import _global_setting
 from kiritanify.propgroups import KiritanifyCharacterSetting
-from kiritanify.utils import _current_frame, _sequences
+from kiritanify.utils import _current_frame, _datetime_str, _sequences
 
 
 class KIRITANIFY_OT_RunKiritanifyForScripts(bpy.types.Operator):
@@ -37,22 +37,26 @@ class KIRITANIFY_OT_NewScriptSequence(bpy.types.Operator):
   bl_idname = "kiritanify.new_script_sequence"
   bl_label = "NewScriptSequence"
 
+  character_name: bpy.props.StringProperty(name='character naem')
+
   def execute(self, context: Context):
     current_frame = _current_frame(context)
     chara = self.find_character(context)
     if chara is None:
       return {'FINISHED'}
+    bpy.ops.sequencer.select_all(action='DESELECT')
     _sequences(context).new_image(
-      frame_start=current_frame,
+      name=f'Script:{chara.chara_name}:{_datetime_str()}',
       filepath='',
       channel=chara.caption_channel(_global_setting(context)),
+      frame_start=current_frame,
     )
     return {'FINISHED'}
 
   def find_character(self, context: Context) -> Optional[KiritanifyCharacterSetting]:
     setting = _global_setting(context)
     for chara in setting.characters:
-      if chara.chara_name == setting.new_script_chara_name:
+      if chara.chara_name == self.character_name:
         return chara
 
 
@@ -71,7 +75,7 @@ class KIRITANIFY_OT_ToggleRamCaching(bpy.types.Operator):
     return {'FINISHED'}
 
 
-OPS_CLASSES = [
+OP_CLASSES = [
   KIRITANIFY_OT_RunKiritanifyForScripts,
   KIRITANIFY_OT_NewScriptSequence,
   KIRITANIFY_OT_ToggleRamCaching,

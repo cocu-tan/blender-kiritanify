@@ -203,6 +203,9 @@ class KiritanifyScriptSequenceSetting(bpy.types.PropertyGroup):
 
   text: bpy.props.StringProperty(name='text')
 
+  gen_voice: bpy.props.BoolProperty(name='gen voice')
+  gen_caption: bpy.props.BoolProperty(name='gen caption')
+
   # custom
   use_custom_voice_text: bpy.props.BoolProperty(name='use custom voice text')
   custom_voice_text: bpy.props.StringProperty(name='custom voice text')
