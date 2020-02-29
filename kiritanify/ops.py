@@ -1,12 +1,16 @@
+import logging
 from typing import Dict, Optional, Set, Union
 
 import bpy
-from bpy.types import Context, ImageSequence, SoundSequence
+from bpy.types import AdjustmentSequence, Context, SoundSequence
 
 import kiritanify.types
 from kiritanify.models import CharacterScript
 from kiritanify.propgroups import KiritanifyCharacterSetting, _global_setting, get_selected_script_sequence
 from kiritanify.utils import _current_frame, _datetime_str, _fps, _sequences
+
+logger = logging.getLogger(__file__)
+logger.setLevel(level=logging.DEBUG)
 
 
 class KIRITANIFY_OT_RunKiritanifyForScripts(bpy.types.Operator):
@@ -19,14 +23,18 @@ class KIRITANIFY_OT_RunKiritanifyForScripts(bpy.types.Operator):
       chara.script_channel(global_setting): chara
       for chara in global_setting.characters
     }
+    logger.debug(f"chara_for_chan: {chara_for_chan!r}")
+
     for seq in context.selected_sequences:
-      if not isinstance(seq, ImageSequence):
+      logger.debug(f"seq: {seq!r}")
+      if not isinstance(seq, AdjustmentSequence):
         continue
-      seq: kiritanify.types.ImageSequence
+      seq: kiritanify.types.KiritanifyScriptSequence
       chara = chara_for_chan[seq.channel]
       if chara is None:
         continue
       cs = CharacterScript.create_from(chara, seq, context)
+      logger.debug(f"cs: {cs!r}")
       cs.maybe_update_voice()
       cs.maybe_update_caption()
     return {'FINISHED'}

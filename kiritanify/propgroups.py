@@ -193,7 +193,7 @@ class KiritanifyCacheSetting(bpy.types.PropertyGroup):
   def _gen_dir(self, data_type: str, chara: 'KiritanifyCharacterSetting') -> Path:
     abspath = bpy.path.abspath(f'//{data_type}/{chara.chara_name}')
     path = Path(abspath)
-    path.mkdir(exist_ok=True)
+    path.mkdir(parents=True, exist_ok=True)
     return path
 
 

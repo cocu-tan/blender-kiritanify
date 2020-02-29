@@ -1,3 +1,7 @@
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
 import bpy
 
 from kiritanify.ops import OP_CLASSES

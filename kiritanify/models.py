@@ -74,7 +74,7 @@ class CharacterScript:
 
     self._align_sequence(
       seq=self.voice_seq,
-      channel=self.channel,
+      channel=self.chara.voice_channel(self._global_setting),
       frame_start=self.seq.frame_start,
     )
     frame_final_end = max(self.voice_seq.frame_final_end, self.seq.frame_final_end)
@@ -104,7 +104,7 @@ class CharacterScript:
 
   def hash_text(self):
     text = self._seq_setting.voice_text()
-    digest = hashlib.blake2s(data=text.encode('UTF-8')).digest()
+    digest = hashlib.blake2s(text.encode('UTF-8')).digest()
     base64encoded = base64.b64encode(digest, altchars=b'-_')
     return base64encoded[:16]
 
@@ -152,3 +152,6 @@ class CharacterScript:
   @property
   def _seq_setting(self):
     return _seq_setting(self.seq)
+
+  def __repr__(self):
+    return f'<CharaScript chara={self.chara.name} seq={self.seq} vseq={self.voice_seq}>'
