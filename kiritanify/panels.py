@@ -76,20 +76,22 @@ class KIRITANIFY_PT_KiritanifyGlobalSettingPanel(bpy.types.Panel):
   """Kiritanify global setting panel"""
   bl_space_type = 'SEQUENCE_EDITOR'
   bl_region_type = 'UI'
-  bl_label = 'KiritanifyGlobalSetting'
+  bl_label = 'GlobalSetting'
   bl_category = 'Kiritanify'
 
   def draw(self, context):
     layout = self.layout
     gs = _global_setting(context)
 
-    row = layout.row()
-    row.label(text="FromChan:")
+    _sp = layout.split()
+    _sp.label(text="FromChan:")
+    row = _sp.row()
     row.prop(gs, 'start_channel_for_script', slider=False, text='Script')
     row.prop(gs, 'start_channel_for_caption', slider=False, text='Caption')
 
-    row = layout.row()
-    row.label(text="Character:")
+    _sp = layout.split()
+    _sp.label(text="Character:")
+    row = _sp.row()
     row.operator(KIRITANIFY_OT_AddCharacter.bl_idname, text='AddChara')
     row.operator(KIRITANIFY_OT_SetDefaultCharacters.bl_idname, text='UseDefault')
     for chara in gs.characters:  # type: KiritanifyCharacterSetting
@@ -131,7 +133,24 @@ class KIRITANIFY_PT_KiritanifyGlobalSettingPanel(bpy.types.Panel):
       _row.prop(chara.voice_style, 'intonation', slider=False)
 
 
+class KIRITANIFY_PT_SeikaCenterSettingPanel(bpy.types.Panel):
+  """Kiritanify seika server setting panel"""
+  bl_space_type = 'SEQUENCE_EDITOR'
+  bl_region_type = 'UI'
+  bl_label = 'SeikaCenterSetting'
+  bl_category = 'Kiritanify'
+
+  def draw(self, context: Context):
+    layout = self.layout
+    gs = _global_setting(context)
+
+    layout.prop(gs.seika_center, 'addr')
+    layout.prop(gs.seika_center, 'user')
+    layout.prop(gs.seika_center, 'password')
+
+
 PANEL_CLASSES = [
   KIRITANIFY_PT_KiritanifyPanel,
   KIRITANIFY_PT_KiritanifyGlobalSettingPanel,
+  KIRITANIFY_PT_SeikaCenterSettingPanel,
 ]

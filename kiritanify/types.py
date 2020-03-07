@@ -8,3 +8,4 @@ SoundSequence = Union[bpy.types.SoundSequence, bpy.types.Sequence]
 AdjustmentSequence = Union[bpy.types.AdjustmentSequence, bpy.types.Sequence]
 
 KiritanifyScriptSequence = AdjustmentSequence
+KiritanifyTachieSequence = AdjustmentSequence

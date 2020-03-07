@@ -308,8 +308,8 @@ class KiritanifyCharacterSetting(bpy.types.PropertyGroup):
 class SeikaCenterSetting(bpy.types.PropertyGroup):
   name = "kiritanify.seika_center_setting"
 
-  addr: bpy.props.StringProperty(name='SeikaCenter Addr', default='http://192.168.88.7:7180')
-  user: bpy.props.StringProperty(name='User name', default='SeikaServerUser')
+  addr: bpy.props.StringProperty(name='Addr', default='http://192.168.88.7:7180')
+  user: bpy.props.StringProperty(name='User', default='SeikaServerUser')
   password: bpy.props.StringProperty(name='Password', default='SeikaServerPassword')
 
 
@@ -325,7 +325,7 @@ def _get_character_enum_items(scene, context):
 class KiritanifyGlobalSetting(bpy.types.PropertyGroup):
   name = "kiritanify.global_setting"
 
-  seika_server: bpy.props.PointerProperty(type=SeikaCenterSetting)
+  seika_center: bpy.props.PointerProperty(type=SeikaCenterSetting)
 
   start_channel_for_script: bpy.props.IntProperty('Script start channel', min=1, default=10)
   start_channel_for_caption: bpy.props.IntProperty('Script start channel', min=1, default=30)

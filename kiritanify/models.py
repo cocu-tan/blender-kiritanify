@@ -100,7 +100,7 @@ class CharacterScript:
     voice_text = self._seq_setting.voice_text()
 
     segment = synthesize_voice(
-      seika_setting=self._global_setting.seika_server,
+      seika_setting=self._global_setting.seika_center,
       chara=self.chara,
       style=self._seq_setting.voice_style(self._global_setting, self.chara),
       script=voice_text,
