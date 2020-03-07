@@ -17,7 +17,7 @@ bl_info = {
   "category": "Sequencer",
   "author": "mohuton",
   "version": (1, 0),
-  "blender": (2, 80, 1),
+  "blender": (2, 80, 2),
   "description": "Generate voiceroid sound data from caption data.",
 }
 
