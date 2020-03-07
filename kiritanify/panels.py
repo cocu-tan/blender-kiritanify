@@ -5,9 +5,10 @@ import bpy
 from bpy.types import Context, UILayout
 
 from kiritanify.ops import (
-  KIRITANIFY_OT_AddCharacter, KIRITANIFY_OT_NewScriptSequence, KIRITANIFY_OT_NewTachieSequences,
-  KIRITANIFY_OT_RemoveCacheFiles, KIRITANIFY_OT_RemoveCharacter, KIRITANIFY_OT_RunKiritanifyForScripts,
-  KIRITANIFY_OT_SetDefaultCharacters, KIRITANIFY_OT_ToggleRamCaching
+  KIRITANIFY_OT_AddCharacter, KIRITANIFY_OT_BaisokuAlign, KIRITANIFY_OT_BaisokuCut, KIRITANIFY_OT_BaisokuInit,
+  KIRITANIFY_OT_NewScriptSequence, KIRITANIFY_OT_NewTachieSequences, KIRITANIFY_OT_RemoveCacheFiles,
+  KIRITANIFY_OT_RemoveCharacter, KIRITANIFY_OT_RunKiritanifyForScripts, KIRITANIFY_OT_SetDefaultCharacters,
+  KIRITANIFY_OT_ToggleRamCaching
 )
 from kiritanify.propgroups import (
   KiritanifyCharacterSetting,
@@ -17,7 +18,7 @@ from kiritanify.propgroups import (
   get_selected_script_sequence,
 )
 from kiritanify.types import KiritanifyScriptSequence
-from kiritanify.utils import split_per_num
+from kiritanify.utils import find_selected_movie_sequence, find_speed_seq_from_movie_seq, split_per_num
 
 
 def get_character_from_channel(context, channel) -> KiritanifyCharacterSetting:
@@ -27,7 +28,7 @@ def get_character_from_channel(context, channel) -> KiritanifyCharacterSetting:
       return chara
 
 
-class KIRITANIFY_PT_KiritanifyScriptPanel(bpy.types.Panel):
+class KIRITANIFY_PT_ScriptPanel(bpy.types.Panel):
   """Kiritanify script panel"""
   bl_space_type = 'SEQUENCE_EDITOR'
   bl_region_type = 'UI'
@@ -79,7 +80,7 @@ class KIRITANIFY_PT_KiritanifyScriptPanel(bpy.types.Panel):
       row.prop(setting, "voice_seq_name", text="", emboss=False)
 
 
-class KIRITANIFY_PT_KiritanifyTachiePanel(bpy.types.Panel):
+class KIRITANIFY_PT_TachiePanel(bpy.types.Panel):
   """Kiritanify tachie panel"""
   bl_space_type = 'SEQUENCE_EDITOR'
   bl_region_type = 'UI'
@@ -111,7 +112,7 @@ class KIRITANIFY_PT_KiritanifyTachiePanel(bpy.types.Panel):
         layout.separator()
 
 
-class KIRITANIFY_PT_KiritanifyGlobalSettingPanel(bpy.types.Panel):
+class KIRITANIFY_PT_GlobalSettingPanel(bpy.types.Panel):
   """Kiritanify global setting panel"""
   bl_space_type = 'SEQUENCE_EDITOR'
   bl_region_type = 'UI'
@@ -170,6 +171,30 @@ class KIRITANIFY_PT_KiritanifyGlobalSettingPanel(bpy.types.Panel):
       _row.prop(chara.voice_style, 'intonation', slider=False)
 
 
+class KIRITANIFY_PT_BaisokuCutPanel(bpy.types.Panel):
+  """Kiritanify seika server setting panel"""
+  bl_space_type = 'SEQUENCE_EDITOR'
+  bl_region_type = 'UI'
+  bl_label = 'BaisokuCut'
+  bl_category = 'Kiritanify'
+
+  def draw(self, context: Context):
+    layout = self.layout
+    _row = layout.row()
+    movie_seq = find_selected_movie_sequence(context)
+    if movie_seq is None:
+      return
+    speed_seq = find_speed_seq_from_movie_seq(context, movie_seq)
+
+    if speed_seq is None:
+      _row.operator(KIRITANIFY_OT_BaisokuInit.bl_idname, text='Init')
+    else:
+      _row.operator(KIRITANIFY_OT_BaisokuCut.bl_idname, text='Cut')
+      _row.operator(KIRITANIFY_OT_BaisokuAlign.bl_idname, text='Align')
+      layout.label(text=movie_seq.name)
+      layout.prop(speed_seq, 'speed_factor', slider=False)
+
+
 class KIRITANIFY_PT_SeikaCenterSettingPanel(bpy.types.Panel):
   """Kiritanify seika server setting panel"""
   bl_space_type = 'SEQUENCE_EDITOR'
@@ -187,8 +212,9 @@ class KIRITANIFY_PT_SeikaCenterSettingPanel(bpy.types.Panel):
 
 
 PANEL_CLASSES = [
-  KIRITANIFY_PT_KiritanifyScriptPanel,
-  KIRITANIFY_PT_KiritanifyTachiePanel,
-  KIRITANIFY_PT_KiritanifyGlobalSettingPanel,
+  KIRITANIFY_PT_ScriptPanel,
+  KIRITANIFY_PT_TachiePanel,
+  KIRITANIFY_PT_BaisokuCutPanel,
+  KIRITANIFY_PT_GlobalSettingPanel,
   KIRITANIFY_PT_SeikaCenterSettingPanel,
 ]

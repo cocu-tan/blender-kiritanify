@@ -1,13 +1,20 @@
 import datetime
 import re
-from typing import Dict, Generator, Iterator, List, Optional, Tuple, TypeVar, Union
+from typing import Dict, Iterator, List, Optional, Tuple, TypeVar, Union
 
-from bpy.types import Context, Sequence, Sequences
+from bpy.types import Context, MovieSequence, Sequence, Sequences, SpeedControlSequence
+
+import kiritanify.types
 
 T = TypeVar('T')
 
+
 def _fps(context: Context):
   return context.scene.render.fps / context.scene.render.fps_base
+
+
+def _speed_factor(speed_seq: Optional[kiritanify.types.SpeedControlSequence]) -> float:
+  return 1 if speed_seq is None else speed_seq.speed_factor
 
 
 def _sequences(context: Context) -> Union[Sequences, List[Sequence]]:
@@ -68,7 +75,22 @@ def find_neighbor_sequence(context: Context, channel: int, target_frame: int) ->
   )
 
 
-def split_per_num(elements: List[T], num: int) -> Generator[Iterator[T]]:
+def split_per_num(elements: List[T], num: int) -> Iterator[Iterator[T]]:
   num_split = len(elements) // num
   for n in range(num_split):
     yield elements[n * num:(n + 1) * num]
+
+
+def find_selected_movie_sequence(context: Context) -> Optional[kiritanify.types.MovieSequence]:
+  for seq in context.selected_sequences:
+    if isinstance(seq, MovieSequence):
+      return seq
+
+
+def find_speed_seq_from_movie_seq(context: Context, movie_seq: kiritanify.types.MovieSequence) \
+    -> Optional[kiritanify.types.SpeedControlSequence]:
+  for speed_seq in _sequences_all(context):
+    if not isinstance(speed_seq, SpeedControlSequence):
+      continue
+    if speed_seq.input_1.name == movie_seq.name:
+      return speed_seq

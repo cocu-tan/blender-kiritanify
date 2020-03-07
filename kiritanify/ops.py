@@ -1,14 +1,15 @@
 import logging
 from pathlib import Path
-from typing import Dict, List, Set, Union
+from typing import Dict, Iterator, List, Set, Union
 
 import bpy
-from bpy.types import AdjustmentSequence, Context, ImageSequence, Sequence, SoundSequence
+from bpy.types import AdjustmentSequence, Context, ImageSequence, MovieSequence, Sequence, SoundSequence
 
 import kiritanify.types
 from kiritanify.models import CharacterScript
 from kiritanify.propgroups import KiritanifyCharacterSetting, _global_setting, get_selected_script_sequence
-from kiritanify.utils import _current_frame, _datetime_str, _fps, _sequences, find_neighbor_sequence
+from kiritanify.utils import _current_frame, _datetime_str, _fps, _sequences, _speed_factor, find_neighbor_sequence, \
+  find_selected_movie_sequence, find_speed_seq_from_movie_seq
 
 logger = logging.getLogger(__file__)
 logger.setLevel(level=logging.DEBUG)
@@ -112,6 +113,7 @@ class KIRITANIFY_OT_NewTachieSequences(bpy.types.Operator):
     )
     seq.frame_final_start = frame_start
     seq.frame_final_end = frame_end
+    seq.alpha_mode = 'ALPHA_OVER'
 
     seq.use_translation = True
     seq.transform.offset_x = chara.tachie_style.offset_x_px
@@ -233,6 +235,90 @@ class KIRITANIFY_OT_RemoveCacheFiles(bpy.types.Operator):
       return []
 
 
+def _baisoku_target_sequences(context: Context) -> Iterator[Sequence]:
+  frame_current = context.scene.frame_current
+  for seq in context.selected_sequences:  # type: Union[MovieSequence, Sequence]
+    if not isinstance(seq, (MovieSequence, Sequence)):
+      continue
+
+    if not (seq.frame_final_start < frame_current < seq.frame_final_end):
+      continue
+    yield seq
+
+
+class KIRITANIFY_OT_BaisokuInit(bpy.types.Operator):
+  bl_idname = "kiritanify.baisoku_init"
+  bl_label = "BaisokuInit"
+
+  def execute(self, context: Context):
+    sequence_editor = context.scene.sequence_editor
+    sequencer = bpy.ops.sequencer
+
+    seq = find_selected_movie_sequence(context)
+    if seq is None:
+      return
+    sequencer.select_all(action="DESELECT")
+    seq.select = True
+
+    bpy.ops.sequencer.effect_strip_add(type='SPEED')
+    speed_effect = sequence_editor.active_strip
+    speed_effect.use_default_fade = False
+    speed_effect.speed_factor = 1
+    speed_effect.channel = seq.channel - 1
+
+    speed_effect.select = False
+    seq.select = True
+
+    return {'FINISHED'}
+
+
+class KIRITANIFY_OT_BaisokuCut(bpy.types.Operator):
+  bl_idname = "kiritanify.baisoku_cut"
+  bl_label = "BaisokuCut"
+
+  def execute(self, context):
+    frame_current = _current_frame(context)
+    target_movie_seqs = list(_baisoku_target_sequences(context))
+    bpy.ops.sequencer.select_all(action='DESELECT')
+    for seq in target_movie_seqs:
+      seq.select = True
+      speed_seq = find_speed_seq_from_movie_seq(context, seq)
+      speed_factor = _speed_factor(speed_seq)
+      if speed_seq is not None:
+        speed_seq.select = True
+      _end = seq.frame_final_end
+      bpy.ops.sequencer.cut(frame=frame_current, type='SOFT', side='RIGHT')
+      for new_seq in context.selected_sequences:  # type: Sequence
+        if not isinstance(new_seq, MovieSequence):
+          continue
+        new_seq.frame_offset_start = seq.frame_offset_start + seq.frame_final_duration * speed_factor
+        new_seq.frame_start = seq.frame_final_end - new_seq.frame_offset_start
+        new_seq.channel = seq.channel
+        new_seq.frame_final_end = _end
+    return {'FINISHED'}
+
+
+class KIRITANIFY_OT_BaisokuAlign(bpy.types.Operator):
+  bl_idname = "kiritanify.baisoku_align"
+  bl_label = "BaisokuAlign"
+
+  def execute(self, context):
+    for seq in context.selected_sequences:
+      if not isinstance(seq, MovieSequence):
+        continue
+      seq: kiritanify.types.MovieSequence
+      speed_seq = find_speed_seq_from_movie_seq(context, seq)
+      if speed_seq is None:
+        continue
+      speed_factor = _speed_factor(speed_seq)
+      if speed_factor == 1:
+        continue
+      duration_before_speedup = seq.frame_duration - seq.frame_offset_start
+      duration_after_speedup = int(duration_before_speedup / speed_factor)
+      seq.frame_final_end = seq.frame_final_start + duration_after_speedup
+    return {'FINISHED'}
+
+
 OP_CLASSES = [
   KIRITANIFY_OT_RunKiritanifyForScripts,
   KIRITANIFY_OT_NewScriptSequence,
@@ -242,4 +328,7 @@ OP_CLASSES = [
   KIRITANIFY_OT_SetDefaultCharacters,
   KIRITANIFY_OT_ToggleRamCaching,
   KIRITANIFY_OT_RemoveCacheFiles,
+  KIRITANIFY_OT_BaisokuInit,
+  KIRITANIFY_OT_BaisokuCut,
+  KIRITANIFY_OT_BaisokuAlign,
 ]
