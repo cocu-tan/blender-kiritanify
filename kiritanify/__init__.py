@@ -32,8 +32,8 @@ def register():
   for cls in CLASSES:
     bpy.utils.register_class(cls)
 
-  bpy.types.AdjustmentSequence.kiritanify = bpy.props.PointerProperty(
-    name="Kiritanify Settings",
+  bpy.types.AdjustmentSequence.kiritanify_script = bpy.props.PointerProperty(
+    name="Kiritanify Script Settings",
     type=KiritanifyScriptSequenceSetting,
   )
   bpy.types.Scene.kiritanify = bpy.props.PointerProperty(
@@ -46,7 +46,7 @@ def unregister():
   for cls in reversed(CLASSES):
     bpy.utils.unregister_class(cls)
   del bpy.types.Scene.kiritanify
-  del bpy.types.ImageSequence.kiritanify
+  del bpy.types.AdjustmentSequence.kiritanify_script
 
 
 if __name__ == "__main__":

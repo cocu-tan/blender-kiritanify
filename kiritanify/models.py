@@ -8,7 +8,7 @@ from PIL.Image import Image
 from bpy.types import Context, Sequence
 
 from kiritanify.caption_renderer import render_text
-from kiritanify.propgroups import CaptionStyle, KiritanifyCharacterSetting, _global_setting, _seq_setting
+from kiritanify.propgroups import CaptionStyle, KiritanifyCharacterSetting, _global_setting, _script_setting
 from kiritanify.seika_center import synthesize_voice, trim_silence
 from kiritanify.types import ImageSequence, KiritanifyScriptSequence, SoundSequence
 from kiritanify.utils import _sequences
@@ -54,8 +54,8 @@ class CharacterScript:
       seq: KiritanifyScriptSequence,
       context: Context,
   ) -> 'CharacterScript':
-    voice_seq = _seq_setting(seq).find_voice_seq(context)
-    caption_seq = _seq_setting(seq).find_caption_seq(context)
+    voice_seq = _script_setting(seq).find_voice_seq(context)
+    caption_seq = _script_setting(seq).find_caption_seq(context)
     return cls(
       chara=chara,
       seq=seq,
@@ -65,12 +65,12 @@ class CharacterScript:
     )
 
   def maybe_update_voice(self):
-    ss = _seq_setting(self.seq)
+    ss = _script_setting(self.seq)
     if not ss.gen_voice:
       return
 
     seq_missing = self.voice_seq is None
-    is_changed = _seq_setting(self.seq).voice_cache_state \
+    is_changed = _script_setting(self.seq).voice_cache_state \
       .is_changed(_global_setting(self.context), self.chara, self.seq)
     should_regenerate: bool = seq_missing or is_changed
     if should_regenerate:
@@ -118,12 +118,12 @@ class CharacterScript:
     return voice_seq
 
   def maybe_update_caption(self):
-    ss = _seq_setting(self.seq)
+    ss = _script_setting(self.seq)
     if not ss.gen_caption:
       return
 
     seq_missing = self.caption_seq is None
-    is_changed = _seq_setting(self.seq).caption_cache_state \
+    is_changed = _script_setting(self.seq).caption_cache_state \
       .is_changed(_global_setting(self.context), self.chara, self.seq)
     should_regenerate: bool = seq_missing or is_changed
     if should_regenerate:
@@ -208,7 +208,7 @@ class CharacterScript:
 
   @property
   def _seq_setting(self):
-    return _seq_setting(self.seq)
+    return _script_setting(self.seq)
 
   def hash_text(self, text):
     text = self._seq_setting.voice_text()

@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Union
+from typing import Dict, List, Set, Union
 
 import bpy
 from bpy.types import AdjustmentSequence, Context, ImageSequence, Sequence, SoundSequence
@@ -8,7 +8,7 @@ from bpy.types import AdjustmentSequence, Context, ImageSequence, Sequence, Soun
 import kiritanify.types
 from kiritanify.models import CharacterScript
 from kiritanify.propgroups import KiritanifyCharacterSetting, _global_setting, get_selected_script_sequence
-from kiritanify.utils import _current_frame, _datetime_str, _fps, _sequences
+from kiritanify.utils import _current_frame, _datetime_str, _fps, _sequences, find_neighbor_sequence
 
 logger = logging.getLogger(__file__)
 logger.setLevel(level=logging.DEBUG)
@@ -45,12 +45,12 @@ class KIRITANIFY_OT_NewScriptSequence(bpy.types.Operator):
   bl_idname = "kiritanify.new_script_sequence"
   bl_label = "NewScriptSequence"
 
-  character_name: bpy.props.StringProperty(name='character name')
+  chara_name: bpy.props.StringProperty(name='character name')
 
   def execute(self, context: Context):
     current_frame = _current_frame(context)
-    chara = self.find_character(context)
-    global_setting = _global_setting(context)
+    gs = _global_setting(context)
+    chara = gs.find_character_by_name(self.chara_name)
 
     if chara is None:
       return {'FINISHED'}
@@ -58,7 +58,7 @@ class KIRITANIFY_OT_NewScriptSequence(bpy.types.Operator):
     result = bpy.ops.sequencer.effect_strip_add(
       frame_start=current_frame,
       frame_end=current_frame + _fps(context) // 2,
-      channel=chara.script_channel(global_setting),
+      channel=chara.script_channel(gs),
       type='ADJUSTMENT',
     )
     if 'FINISHED' not in result:
@@ -67,11 +67,58 @@ class KIRITANIFY_OT_NewScriptSequence(bpy.types.Operator):
     script_sequence.name = f'Script:{chara.chara_name}:{_datetime_str()}'
     return {'FINISHED'}
 
-  def find_character(self, context: Context) -> Optional[KiritanifyCharacterSetting]:
-    setting = _global_setting(context)
-    for chara in setting.characters:
-      if chara.chara_name == self.character_name:
-        return chara
+
+class KIRITANIFY_OT_NewTachieSequences(bpy.types.Operator):
+  bl_idname = 'kiritanify.new_tachie_sequences'
+  bl_label = 'NewTachieSeqs'
+
+  chara_name: bpy.props.StringProperty('Character name')
+  image_path: bpy.props.StringProperty('tachie path')
+
+  def execute(self, context: Context):
+    current_frame = _current_frame(context)
+    gs = _global_setting(context)
+    chara = gs.find_character_by_name(self.chara_name)
+
+    if chara is None:
+      return {'FINISHED'}
+    filepath = self.image_path
+    if filepath is None:
+      return {'FINISHED'}
+
+    frame_start = context.scene.frame_start
+    frame_end = context.scene.frame_end
+    _prev, _curr, _next = find_neighbor_sequence(context, chara.tachie_channel(gs), current_frame)
+    if _curr is not None:
+      return {'FINISHED'}
+    if _prev is not None:
+      frame_start = _prev.frame_final_end
+    if _next is not None:
+      frame_end = _next.frame_final_start
+
+    print(_prev, _curr, _next)
+    if _prev is not None:
+      print('prev', (_prev.frame_final_start, _prev.frame_final_end))
+    if _next is not None:
+      print('_next', (_next.frame_final_start, _next.frame_final_end))
+    print(frame_start, frame_end)
+
+    bpy.ops.sequencer.select_all(action='DESELECT')
+    seq: kiritanify.types.ImageSequence = _sequences(context).new_image(
+      name=f'Tachie:{chara.chara_name}:{_datetime_str()}',
+      filepath=str(filepath),
+      channel=chara.tachie_channel(gs),
+      frame_start=current_frame,
+    )
+    seq.frame_final_start = frame_start
+    seq.frame_final_end = frame_end
+
+    seq.use_translation = True
+    seq.transform.offset_x = chara.tachie_style.offset_x_px
+    seq.transform.offset_y = chara.tachie_style.offset_y_px
+    seq.use_flip_x = chara.tachie_style.use_flip_x
+
+    return {'FINISHED'}
 
 
 class KIRITANIFY_OT_AddCharacter(bpy.types.Operator):
@@ -116,6 +163,7 @@ class KIRITANIFY_OT_SetDefaultCharacters(bpy.types.Operator):
     kiritan.tachie_style.use_flip_x = True
     kiritan.voice_style.speed = 1.3
     kiritan.voice_style.intonation = 1.1
+    kiritan.tachie_directory = '//../assets/karai/kiritan/normal/'
 
     akari: KiritanifyCharacterSetting = charas.add()
     akari.chara_name = "Akari"
@@ -126,6 +174,7 @@ class KIRITANIFY_OT_SetDefaultCharacters(bpy.types.Operator):
     akari.voice_style.speed = 1.25
     akari.voice_style.pitch = 1.08
     akari.voice_style.intonation = 1.60
+    akari.tachie_directory = '//../assets/karai/akari/normal/'
     return {'FINISHED'}
 
 
@@ -187,6 +236,7 @@ class KIRITANIFY_OT_RemoveCacheFiles(bpy.types.Operator):
 OP_CLASSES = [
   KIRITANIFY_OT_RunKiritanifyForScripts,
   KIRITANIFY_OT_NewScriptSequence,
+  KIRITANIFY_OT_NewTachieSequences,
   KIRITANIFY_OT_AddCharacter,
   KIRITANIFY_OT_RemoveCharacter,
   KIRITANIFY_OT_SetDefaultCharacters,

@@ -1,21 +1,23 @@
+from pathlib import Path
 from typing import Optional
 
 import bpy
 from bpy.types import Context, UILayout
 
 from kiritanify.ops import (
-  KIRITANIFY_OT_AddCharacter, KIRITANIFY_OT_NewScriptSequence, KIRITANIFY_OT_RemoveCacheFiles,
-  KIRITANIFY_OT_RemoveCharacter, KIRITANIFY_OT_RunKiritanifyForScripts, KIRITANIFY_OT_SetDefaultCharacters,
-  KIRITANIFY_OT_ToggleRamCaching
+  KIRITANIFY_OT_AddCharacter, KIRITANIFY_OT_NewScriptSequence, KIRITANIFY_OT_NewTachieSequences,
+  KIRITANIFY_OT_RemoveCacheFiles, KIRITANIFY_OT_RemoveCharacter, KIRITANIFY_OT_RunKiritanifyForScripts,
+  KIRITANIFY_OT_SetDefaultCharacters, KIRITANIFY_OT_ToggleRamCaching
 )
 from kiritanify.propgroups import (
   KiritanifyCharacterSetting,
   KiritanifyScriptSequenceSetting,
   _global_setting,
-  _seq_setting,
+  _script_setting,
   get_selected_script_sequence,
 )
 from kiritanify.types import KiritanifyScriptSequence
+from kiritanify.utils import split_per_num
 
 
 def get_character_from_channel(context, channel) -> KiritanifyCharacterSetting:
@@ -26,16 +28,14 @@ def get_character_from_channel(context, channel) -> KiritanifyCharacterSetting:
 
 
 class KIRITANIFY_PT_KiritanifyScriptPanel(bpy.types.Panel):
-  """Kiritanify main panel"""
+  """Kiritanify script panel"""
   bl_space_type = 'SEQUENCE_EDITOR'
   bl_region_type = 'UI'
   bl_label = 'Script'
   bl_category = 'Kiritanify'
 
   def draw(self, context: Context):
-    layout = self.layout
-    gs = _global_setting(context)
-
+    layout: UILayout = self.layout
     _row = layout.row()
     _row.operator(KIRITANIFY_OT_RunKiritanifyForScripts.bl_idname, text="Run Kiritanify for Scripts")
     _row = layout.row()
@@ -43,6 +43,14 @@ class KIRITANIFY_PT_KiritanifyScriptPanel(bpy.types.Panel):
     _row.operator(KIRITANIFY_OT_RemoveCacheFiles.bl_idname, text="RemoveCacheFiles")
 
     layout.separator()
+    self._draw_ui_for_new_seq(context, layout)
+
+    layout.separator()
+    self._draw_ui_for_seq_settings(context, layout)
+
+  @staticmethod
+  def _draw_ui_for_new_seq(context: Context, layout: UILayout):
+    gs = _global_setting(context)
     # new sequence button per character
     if len(gs.characters) > 0:
       _box = layout.box()
@@ -53,18 +61,14 @@ class KIRITANIFY_PT_KiritanifyScriptPanel(bpy.types.Panel):
           operator=KIRITANIFY_OT_NewScriptSequence.bl_idname,
           text=f'{chara.chara_name}',
         )
-        op.character_name = chara.chara_name
-
-    layout.separator()
-
-    self._draw_ui_for_seq_settings(context, layout)
+        op.chara_name = chara.chara_name
 
   @staticmethod
   def _draw_ui_for_seq_settings(context: Context, layout: UILayout):
     seq: Optional[KiritanifyScriptSequence] = get_selected_script_sequence(context)
     if seq is None:
       return
-    setting: KiritanifyScriptSequenceSetting = _seq_setting(seq)
+    setting: KiritanifyScriptSequenceSetting = _script_setting(seq)
 
     layout.prop(setting, "text")
     layout.label(text=f"Chara: {get_character_from_channel(context, seq.channel).chara_name}")
@@ -73,6 +77,38 @@ class KIRITANIFY_PT_KiritanifyScriptPanel(bpy.types.Panel):
     row.prop(setting, "gen_voice")
     if setting.gen_voice:
       row.prop(setting, "voice_seq_name", text="", emboss=False)
+
+
+class KIRITANIFY_PT_KiritanifyTachiePanel(bpy.types.Panel):
+  """Kiritanify tachie panel"""
+  bl_space_type = 'SEQUENCE_EDITOR'
+  bl_region_type = 'UI'
+  bl_label = 'Tachie'
+  bl_category = 'Kiritanify'
+
+  def draw(self, context: Context):
+    layout: UILayout = self.layout
+    self._draw_ui_for_new_seq(context, layout)
+
+  @staticmethod
+  def _draw_ui_for_new_seq(context: Context, layout: UILayout):
+    gs = _global_setting(context)
+    # new sequence button per character
+    if len(gs.characters) > 0:
+      for chara in gs.characters:  # type: KiritanifyCharacterSetting
+        _box = layout.box()
+        _box.label(text=f'{chara.chara_name}')
+        for seqs in split_per_num(chara.tachie_files(), 4):
+          _row = _box.row()
+          for e in seqs:  # type: Path
+            op: KIRITANIFY_OT_NewTachieSequences \
+              = _row.operator(
+              operator=KIRITANIFY_OT_NewTachieSequences.bl_idname,
+              text=f'{e.name}',
+            )
+            op.chara_name = chara.chara_name
+            op.image_path = str(e)
+        layout.separator()
 
 
 class KIRITANIFY_PT_KiritanifyGlobalSettingPanel(bpy.types.Panel):
@@ -152,6 +188,7 @@ class KIRITANIFY_PT_SeikaCenterSettingPanel(bpy.types.Panel):
 
 PANEL_CLASSES = [
   KIRITANIFY_PT_KiritanifyScriptPanel,
+  KIRITANIFY_PT_KiritanifyTachiePanel,
   KIRITANIFY_PT_KiritanifyGlobalSettingPanel,
   KIRITANIFY_PT_SeikaCenterSettingPanel,
 ]

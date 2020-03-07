@@ -1,11 +1,23 @@
+import logging
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional, Union
 
 import bpy
-from bpy.types import AdjustmentSequence, Context
+from bpy.types import AdjustmentSequence, AnyType, Context
 
 from kiritanify.types import ImageSequence, KiritanifyScriptSequence, SoundSequence
 from kiritanify.utils import _datetime_str, _sequences_all, trim_bracketed_sentence
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+
+def _enum_chara_names(_: AnyType, context: Context):
+  gs = _global_setting(context)
+  return [
+    (c.chara_name, c.chara_name, '')
+    for c in gs.characters
+  ]
 
 
 class CaptionStyle(bpy.types.PropertyGroup):
@@ -118,7 +130,7 @@ class CaptionCacheState(bpy.types.PropertyGroup, ICacheState):
       chara: 'KiritanifyCharacterSetting',
       seq: KiritanifyScriptSequence,
   ) -> None:
-    _setting = _seq_setting(seq)
+    _setting = _script_setting(seq)
     text = _setting.caption_text()
     style = _setting.caption_style(global_setting, chara)
     self.invalid = False
@@ -134,7 +146,7 @@ class CaptionCacheState(bpy.types.PropertyGroup, ICacheState):
     if self.invalid:
       return True
 
-    _setting = _seq_setting(seq)
+    _setting = _script_setting(seq)
     text = _setting.caption_text()
     style = _setting.caption_style(global_setting, chara)
     return not (
@@ -160,7 +172,7 @@ class VoiceCacheState(bpy.types.PropertyGroup, ICacheState):
       chara: 'KiritanifyCharacterSetting',
       seq: KiritanifyScriptSequence,
   ) -> None:
-    _setting = _seq_setting(seq)
+    _setting = _script_setting(seq)
     text = _setting.voice_text()
     style = _setting.voice_style(global_setting, chara)
     self.invalid = False
@@ -176,7 +188,7 @@ class VoiceCacheState(bpy.types.PropertyGroup, ICacheState):
     if self.invalid:
       return True
 
-    _setting = _seq_setting(seq)
+    _setting = _script_setting(seq)
     text = _setting.voice_text()
     style = _setting.voice_style(global_setting, chara)
 
@@ -278,7 +290,7 @@ class KiritanifyCharacterSetting(bpy.types.PropertyGroup):
   tachie_style: bpy.props.PointerProperty(name='Tachie style', type=TachieStyle)
   voice_style: bpy.props.PointerProperty(name='Voice style', type=VoiceStyle)
 
-  tachie_directory: bpy.props.StringProperty(name="Tachie dir", subtype="DIR_PATH", default="")
+  tachie_directory: bpy.props.StringProperty(name='Tachie dir', subtype='DIR_PATH', default='')
 
   def __repr__(self):
     return f'<KiritanifyCharacterSetting chara_name={self.chara_name} cid={self.cid}>'
@@ -303,6 +315,27 @@ class KiritanifyCharacterSetting(bpy.types.PropertyGroup):
   ) -> int:
     idx = global_setting.character_index(self)
     return global_setting.start_channel_for_script + 2 * idx + 1
+
+  def tachie_channel(
+      self,
+      global_setting: 'KiritanifyGlobalSetting',
+  ) -> int:
+    idx = global_setting.character_index(self)
+    return global_setting.start_channel_for_tachie + 2 * idx + 1
+
+  def tachie_files(self) -> List[Path]:
+    if self.tachie_directory == '':
+      logger.debug(f'tachie directory: empty string')
+      return []
+    dir_path = Path(bpy.path.abspath(self.tachie_directory)).resolve()
+    if not dir_path.exists():
+      logger.debug(f'tachie directory not found: {dir_path}')
+      return []
+    return [
+      child
+      for child in dir_path.iterdir()
+      if child.is_file()
+    ]
 
 
 class SeikaCenterSetting(bpy.types.PropertyGroup):
@@ -329,6 +362,7 @@ class KiritanifyGlobalSetting(bpy.types.PropertyGroup):
 
   start_channel_for_script: bpy.props.IntProperty('Script start channel', min=1, default=10)
   start_channel_for_caption: bpy.props.IntProperty('Script start channel', min=1, default=30)
+  start_channel_for_tachie: bpy.props.IntProperty('Script start channel', min=1, default=20)
   characters: bpy.props.CollectionProperty(type=KiritanifyCharacterSetting)
 
   cache_setting: bpy.props.PointerProperty(type=KiritanifyCacheSetting, name='cache setting')
@@ -343,6 +377,12 @@ class KiritanifyGlobalSetting(bpy.types.PropertyGroup):
       if chara == _chara:
         return _idx
     raise ValueError(f'Unexpected character: {chara!r}')
+
+  def find_character_by_name(self, chara_name: str) -> Optional[KiritanifyCharacterSetting]:
+    for c in self.characters:
+      if c.chara_name == chara_name:
+        return c
+    return None
 
 
 PROPGROUP_CLASSES = [
@@ -363,8 +403,8 @@ def _global_setting(context: Context) -> KiritanifyGlobalSetting:
   return context.scene.kiritanify
 
 
-def _seq_setting(seq: KiritanifyScriptSequence) -> KiritanifyScriptSequenceSetting:
-  return seq.kiritanify
+def _script_setting(seq: KiritanifyScriptSequence) -> KiritanifyScriptSequenceSetting:
+  return seq.kiritanify_script
 
 
 def get_selected_script_sequence(context: Context) -> Optional[KiritanifyScriptSequence]:
