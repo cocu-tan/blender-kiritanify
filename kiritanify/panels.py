@@ -25,11 +25,11 @@ def get_character_from_channel(context, channel) -> KiritanifyCharacterSetting:
       return chara
 
 
-class KIRITANIFY_PT_KiritanifyPanel(bpy.types.Panel):
+class KIRITANIFY_PT_KiritanifyScriptPanel(bpy.types.Panel):
   """Kiritanify main panel"""
   bl_space_type = 'SEQUENCE_EDITOR'
   bl_region_type = 'UI'
-  bl_label = 'Kiritanify'
+  bl_label = 'Script'
   bl_category = 'Kiritanify'
 
   def draw(self, context: Context):
@@ -43,14 +43,17 @@ class KIRITANIFY_PT_KiritanifyPanel(bpy.types.Panel):
     _row.operator(KIRITANIFY_OT_RemoveCacheFiles.bl_idname, text="RemoveCacheFiles")
 
     layout.separator()
-    _row = layout.row()
-    for chara in gs.characters:  # type: KiritanifyCharacterSetting
-      op: KIRITANIFY_OT_NewScriptSequence \
-        = _row.operator(
-        operator=KIRITANIFY_OT_NewScriptSequence.bl_idname,
-        text=f'{chara.chara_name}',
-      )
-      op.character_name = chara.chara_name
+    # new sequence button per character
+    if len(gs.characters) > 0:
+      _box = layout.box()
+      _row = _box.row()
+      for chara in gs.characters:  # type: KiritanifyCharacterSetting
+        op: KIRITANIFY_OT_NewScriptSequence \
+          = _row.operator(
+          operator=KIRITANIFY_OT_NewScriptSequence.bl_idname,
+          text=f'{chara.chara_name}',
+        )
+        op.character_name = chara.chara_name
 
     layout.separator()
 
@@ -83,15 +86,13 @@ class KIRITANIFY_PT_KiritanifyGlobalSettingPanel(bpy.types.Panel):
     layout = self.layout
     gs = _global_setting(context)
 
-    _sp = layout.split()
-    _sp.label(text="FromChan:")
-    row = _sp.row()
+    row = layout.row()
+    row.label(text="FromChan:")
     row.prop(gs, 'start_channel_for_script', slider=False, text='Script')
     row.prop(gs, 'start_channel_for_caption', slider=False, text='Caption')
 
-    _sp = layout.split()
-    _sp.label(text="Character:")
-    row = _sp.row()
+    row = layout.row()
+    row.label(text="Character:")
     row.operator(KIRITANIFY_OT_AddCharacter.bl_idname, text='AddChara')
     row.operator(KIRITANIFY_OT_SetDefaultCharacters.bl_idname, text='UseDefault')
     for chara in gs.characters:  # type: KiritanifyCharacterSetting
@@ -150,7 +151,7 @@ class KIRITANIFY_PT_SeikaCenterSettingPanel(bpy.types.Panel):
 
 
 PANEL_CLASSES = [
-  KIRITANIFY_PT_KiritanifyPanel,
+  KIRITANIFY_PT_KiritanifyScriptPanel,
   KIRITANIFY_PT_KiritanifyGlobalSettingPanel,
   KIRITANIFY_PT_SeikaCenterSettingPanel,
 ]
