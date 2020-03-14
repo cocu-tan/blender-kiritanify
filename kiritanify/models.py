@@ -84,6 +84,8 @@ class CharacterScript:
         chara=self.chara,
         seq=self.seq,
       )
+    if self._seq_setting.voice_text() == '':
+      return
     assert self.voice_seq is not None
 
     self._align_sequence(
@@ -177,6 +179,7 @@ class CharacterScript:
       frame_start=self.seq.frame_start,
     )
     image_seq.use_translation = True
+    image_seq.blend_type = 'ALPHA_OVER'
     return image_seq
 
   @staticmethod

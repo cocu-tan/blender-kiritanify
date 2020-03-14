@@ -7,8 +7,8 @@ from bpy.types import Context, UILayout
 from kiritanify.ops import (
   KIRITANIFY_OT_AddCharacter, KIRITANIFY_OT_BaisokuAlign, KIRITANIFY_OT_BaisokuCut, KIRITANIFY_OT_BaisokuInit,
   KIRITANIFY_OT_NewScriptSequence, KIRITANIFY_OT_NewTachieSequences, KIRITANIFY_OT_RemoveCacheFiles,
-  KIRITANIFY_OT_RemoveCharacter, KIRITANIFY_OT_RunKiritanifyForScripts, KIRITANIFY_OT_SetDefaultCharacters,
-  KIRITANIFY_OT_ToggleRamCaching
+  KIRITANIFY_OT_RemoveCharacter, KIRITANIFY_OT_ResetVoiceStyle, KIRITANIFY_OT_RunKiritanifyForScripts,
+  KIRITANIFY_OT_SetDefaultCharacters, KIRITANIFY_OT_ToggleRamCaching
 )
 from kiritanify.propgroups import (
   KiritanifyCharacterSetting,
@@ -49,6 +49,9 @@ class KIRITANIFY_PT_ScriptPanel(bpy.types.Panel):
     layout.separator()
     self._draw_ui_for_seq_settings(context, layout)
 
+    layout.separator()
+    self._maybe_draw_ui_for_voice_style(context, layout)
+
   @staticmethod
   def _draw_ui_for_new_seq(context: Context, layout: UILayout):
     gs = _global_setting(context)
@@ -78,6 +81,23 @@ class KIRITANIFY_PT_ScriptPanel(bpy.types.Panel):
     row.prop(setting, "gen_voice")
     if setting.gen_voice:
       row.prop(setting, "voice_seq_name", text="", emboss=False)
+
+  @staticmethod
+  def _maybe_draw_ui_for_voice_style(context: Context, layout: UILayout):
+    seq: Optional[KiritanifyScriptSequence] = get_selected_script_sequence(context)
+    if seq is None:
+      return
+    setting: KiritanifyScriptSequenceSetting = _script_setting(seq)
+
+    _row = layout.row()
+    _row.prop(setting, 'use_custom_voice_style', text='custom_voice')
+    _row.operator(KIRITANIFY_OT_ResetVoiceStyle.bl_idname, text='Reset')
+    if setting.use_custom_voice_style:
+      _row = layout.row()
+      _row.prop(setting.custom_voice_style, 'volume')
+      _row.prop(setting.custom_voice_style, 'speed')
+      _row.prop(setting.custom_voice_style, 'pitch')
+      _row.prop(setting.custom_voice_style, 'intonation')
 
 
 class KIRITANIFY_PT_TachiePanel(bpy.types.Panel):

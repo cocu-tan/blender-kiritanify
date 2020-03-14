@@ -7,7 +7,8 @@ from bpy.types import AdjustmentSequence, Context, ImageSequence, MovieSequence,
 
 import kiritanify.types
 from kiritanify.models import CharacterScript
-from kiritanify.propgroups import KiritanifyCharacterSetting, _global_setting, get_selected_script_sequence
+from kiritanify.propgroups import KiritanifyCharacterSetting, _global_setting, _script_setting, \
+  get_selected_script_sequence
 from kiritanify.utils import _current_frame, _datetime_str, _fps, _sequences, _speed_factor, find_neighbor_sequence, \
   find_selected_movie_sequence, find_speed_seq_from_movie_seq
 
@@ -180,14 +181,39 @@ class KIRITANIFY_OT_SetDefaultCharacters(bpy.types.Operator):
     return {'FINISHED'}
 
 
+class KIRITANIFY_OT_ResetVoiceStyle(bpy.types.Operator):
+  bl_idname = 'kiritanify.reset_voice_style'
+  bl_label = 'ResetVoiceStyle'
+
+  def execute(self, context: Context):
+    gs = _global_setting(context)
+    chara_for_channel = {
+      chara.script_channel(gs): chara
+      for chara in gs.characters
+    }
+    print(chara_for_channel)
+    for seq in context.selected_sequences:  # type: Sequence
+      print(seq)
+      if not (seq.channel in chara_for_channel and isinstance(seq, AdjustmentSequence)):
+        continue
+      chara = chara_for_channel[seq.channel]
+      print(chara)
+      if chara is None:
+        continue
+      print(chara.voice_style)
+      _script_setting(seq).custom_voice_style.update(chara.voice_style)
+    return {'FINISHED'}
+
+
 class KIRITANIFY_OT_ToggleRamCaching(bpy.types.Operator):
   bl_idname = 'kiritanify.toggle_ram_caching'
   bl_label = 'ToggleRamCaching'
 
   def execute(self, context):
+    gs = _global_setting(context)
     target_channels = [
-      chara.voice_channel
-      for chara in _global_setting(context).characters
+      chara.voice_channel(gs)
+      for chara in gs.characters
     ]
     for seq in _sequences(context):  # type: Sequence
       if seq.channel in target_channels and isinstance(seq, SoundSequence):
@@ -233,6 +259,34 @@ class KIRITANIFY_OT_RemoveCacheFiles(bpy.types.Operator):
     else:
       logger.debug(f'RemoveCacheFiles: unexpected seq{seq}')
       return []
+
+
+class KIRITANIFY_OT_AlignToStart(bpy.types.Operator):
+  bl_idname = 'kiritanify.align_to_start'
+  bl_label = 'Align to start'
+
+  def execute(self, context: Context):
+    frame_current = _current_frame(context)
+    for seq in context.selected_sequences:  # type: Sequence
+      try:
+        seq.frame_start = frame_current - seq.frame_offset_start
+      except:
+        print(seq, 'aligned to start failed')
+    return {'FINISHED'}
+
+
+class KIRITANIFY_OT_AlignToEnd(bpy.types.Operator):
+  bl_idname = 'kiritanify.align_to_end'
+  bl_label = 'Align to end'
+
+  def execute(self, context: Context):
+    frame_current = _current_frame(context)
+    for seq in context.selected_sequences:  # type: Sequence
+      try:
+        seq.frame_start = frame_current - seq.frame_offset_start - seq.frame_final_duration
+      except:
+        print(seq, 'aligned to end failed')
+    return {'FINISHED'}
 
 
 def _baisoku_target_sequences(context: Context) -> Iterator[Sequence]:
@@ -326,9 +380,12 @@ OP_CLASSES = [
   KIRITANIFY_OT_AddCharacter,
   KIRITANIFY_OT_RemoveCharacter,
   KIRITANIFY_OT_SetDefaultCharacters,
+  KIRITANIFY_OT_ResetVoiceStyle,
   KIRITANIFY_OT_ToggleRamCaching,
   KIRITANIFY_OT_RemoveCacheFiles,
   KIRITANIFY_OT_BaisokuInit,
   KIRITANIFY_OT_BaisokuCut,
   KIRITANIFY_OT_BaisokuAlign,
+  KIRITANIFY_OT_AlignToStart,
+  KIRITANIFY_OT_AlignToEnd,
 ]

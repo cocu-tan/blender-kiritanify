@@ -230,6 +230,8 @@ class KiritanifyScriptSequenceSetting(bpy.types.PropertyGroup):
   # custom
   use_custom_voice_text: bpy.props.BoolProperty(name='use custom voice text', default=False)
   custom_voice_text: bpy.props.StringProperty(name='custom voice text')
+  use_custom_voice_style: bpy.props.BoolProperty(name='use custom voice style', default=False)
+  custom_voice_style: bpy.props.PointerProperty(type=VoiceStyle, name='custom voice style')
   use_custom_caption_style: bpy.props.BoolProperty(name='use custom property', default=False)
   custom_caption_style: bpy.props.PointerProperty(type=CaptionStyle, name='caption style')
 
@@ -242,7 +244,7 @@ class KiritanifyScriptSequenceSetting(bpy.types.PropertyGroup):
   caption_cache_state: bpy.props.PointerProperty(name='caption cache state', type=CaptionCacheState)
 
   def voice_text(self) -> str:
-    script = self.raw_voice_text()
+    script = self.raw_voice_text().strip()
     return trim_bracketed_sentence(script.replace('\\n', ''))
 
   def raw_voice_text(self) -> str:
@@ -255,10 +257,12 @@ class KiritanifyScriptSequenceSetting(bpy.types.PropertyGroup):
       global_setting: 'KiritanifyGlobalSetting',
       chara: 'KiritanifyCharacterSetting',
   ) -> VoiceStyle:
+    if self.use_custom_voice_style:
+      return self.custom_voice_style
     return chara.voice_style
 
   def caption_text(self) -> str:
-    return self.text
+    return self.text.replace('\\n', '\n')
 
   def caption_style(
       self,
