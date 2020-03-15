@@ -6,7 +6,7 @@ import bpy
 from bpy.types import AdjustmentSequence, AnyType, Context
 
 from kiritanify.types import ImageSequence, KiritanifyScriptSequence, SoundSequence
-from kiritanify.utils import _datetime_str, _sequences_all, trim_bracketed_sentence
+from kiritanify.utils import _datetime_str, _sequences_all, hash_text, trim_bracketed_sentence
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -202,12 +202,14 @@ class KiritanifyCacheSetting(bpy.types.PropertyGroup):
   name = 'kiritanify.cache_dir_setting'
 
   def voice_path(self, chara: 'KiritanifyCharacterSetting', seq: KiritanifyScriptSequence) -> Path:
-    dir_path = self._gen_dir('voice', chara)
-    return dir_path / f'{_datetime_str()}.ogg'
+    ss = _script_setting(seq)
+    dir_path = self._gen_dir('caption', chara)
+    return dir_path / f'{_datetime_str()}:{hash_text(ss.voice_text())}.png'
 
   def caption_path(self, chara: 'KiritanifyCharacterSetting', seq: KiritanifyScriptSequence) -> Path:
+    ss = _script_setting(seq)
     dir_path = self._gen_dir('caption', chara)
-    return dir_path / f'{_datetime_str()}.png'
+    return dir_path / f'{_datetime_str()}:{hash_text(ss.caption_text())}.png'
 
   def root_dir(self) -> Path:
     return Path(bpy.path.abspath('//kiritanify'))

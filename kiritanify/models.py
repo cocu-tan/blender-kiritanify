@@ -1,5 +1,3 @@
-import base64
-import hashlib
 import logging
 from pathlib import Path
 from typing import Optional, Tuple
@@ -11,7 +9,7 @@ from kiritanify.caption_renderer import render_text
 from kiritanify.propgroups import CaptionStyle, KiritanifyCharacterSetting, _global_setting, _script_setting
 from kiritanify.seika_center import synthesize_voice, trim_silence
 from kiritanify.types import ImageSequence, KiritanifyScriptSequence, SoundSequence
-from kiritanify.utils import _sequences
+from kiritanify.utils import _sequences, hash_text
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -69,6 +67,9 @@ class CharacterScript:
     if not ss.gen_voice:
       return
 
+    if self._seq_setting.voice_text() == '':
+      return
+
     seq_missing = self.voice_seq is None
     is_changed = _script_setting(self.seq).voice_cache_state \
       .is_changed(_global_setting(self.context), self.chara, self.seq)
@@ -84,8 +85,6 @@ class CharacterScript:
         chara=self.chara,
         seq=self.seq,
       )
-    if self._seq_setting.voice_text() == '':
-      return
     assert self.voice_seq is not None
 
     self._align_sequence(
@@ -110,7 +109,7 @@ class CharacterScript:
     trim_silence(segment).export(str(sound_path), format='ogg')
 
     voice_seq = _sequences(self.context).new_sound(
-      name=f'Voice:{self.chara.chara_name}:{self.hash_text(voice_text)}',
+      name=f'Voice:{self.chara.chara_name}:{hash_text(voice_text)}',
       filepath=str(sound_path),
       channel=self.chara.voice_channel(self._global_setting),
       frame_start=self.seq.frame_final_start,
@@ -122,6 +121,9 @@ class CharacterScript:
   def maybe_update_caption(self):
     ss = _script_setting(self.seq)
     if not ss.gen_caption:
+      return
+
+    if self._seq_setting.caption_text() == '':
       return
 
     seq_missing = self.caption_seq is None
@@ -173,7 +175,7 @@ class CharacterScript:
     logger.debug(f'caption_path: {caption_path}')
 
     image_seq: ImageSequence = _sequences(self.context).new_image(
-      name=f'Caption:{self.chara.chara_name}:{self.hash_text(caption_text)}',
+      name=f'Caption:{self.chara.chara_name}:{hash_text(caption_text)}',
       filepath=str(caption_path),
       channel=self.chara.caption_channel(self._global_setting),
       frame_start=self.seq.frame_start,
@@ -212,12 +214,6 @@ class CharacterScript:
   @property
   def _seq_setting(self):
     return _script_setting(self.seq)
-
-  def hash_text(self, text):
-    text = self._seq_setting.voice_text()
-    digest = hashlib.blake2s(text.encode('UTF-8')).digest()
-    base64encoded = base64.b64encode(digest, altchars=b'-_')
-    return base64encoded[:16].decode('UTF-8')
 
   def __repr__(self):
     return f'<CharaScript chara={self.chara.name} seq={self.seq} vseq={self.voice_seq}>'

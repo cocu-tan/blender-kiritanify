@@ -10,7 +10,7 @@ from kiritanify.models import CharacterScript
 from kiritanify.propgroups import KiritanifyCharacterSetting, _global_setting, _script_setting, \
   get_selected_script_sequence
 from kiritanify.utils import _current_frame, _datetime_str, _fps, _sequences, _speed_factor, find_neighbor_sequence, \
-  find_selected_movie_sequence, find_speed_seq_from_movie_seq
+  find_selected_movie_sequence, find_speed_seq_from_movie_seq, get_sequences_by_channel
 
 logger = logging.getLogger(__file__)
 logger.setLevel(level=logging.DEBUG)
@@ -40,6 +40,31 @@ class KIRITANIFY_OT_RunKiritanifyForScripts(bpy.types.Operator):
       logger.debug(f"cs: {cs!r}")
       cs.maybe_update_voice()
       cs.maybe_update_caption()
+    return {'FINISHED'}
+
+
+class KIRITANIFY_OT_RunKiritanifyForAllScripts(bpy.types.Operator):
+  bl_idname = "kiritanify.run_kiritanify_for_all_scripts"
+  bl_label = "Run KiritanifyForAllScripts"
+
+  def execute(self, context: Context) -> Set[Union[int, str]]:
+    gs = _global_setting(context)
+    chara_for_chan: Dict[int, KiritanifyCharacterSetting] = {
+      chara.script_channel(gs): chara
+      for chara in gs.characters
+    }
+    logger.debug(f"chara_for_chan: {chara_for_chan!r}")
+
+    for chara in gs.characters:
+      for seq in get_sequences_by_channel(context, chara.script_channel(gs)):
+        logger.debug(f"seq: {seq!r}")
+        if not isinstance(seq, AdjustmentSequence):
+          continue
+        seq: kiritanify.types.KiritanifyScriptSequence
+        cs = CharacterScript.create_from(chara, seq, context)
+        logger.debug(f"cs: {cs!r}")
+        cs.maybe_update_voice()
+        cs.maybe_update_caption()
     return {'FINISHED'}
 
 
@@ -375,6 +400,7 @@ class KIRITANIFY_OT_BaisokuAlign(bpy.types.Operator):
 
 OP_CLASSES = [
   KIRITANIFY_OT_RunKiritanifyForScripts,
+  KIRITANIFY_OT_RunKiritanifyForAllScripts,
   KIRITANIFY_OT_NewScriptSequence,
   KIRITANIFY_OT_NewTachieSequences,
   KIRITANIFY_OT_AddCharacter,

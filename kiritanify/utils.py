@@ -1,4 +1,6 @@
+import base64
 import datetime
+import hashlib
 import re
 from typing import Dict, Iterator, List, Optional, Tuple, TypeVar, Union
 
@@ -26,7 +28,13 @@ def _sequences_all(context: Context) -> Union[Dict[str, Sequence], List[Sequence
 
 
 def _datetime_str():
-  return datetime.datetime.now().strftime('%Y%m%d%-H%M%S')
+  return datetime.datetime.now().strftime('%Y%m%d%-H%M%S%f')
+
+
+def hash_text(text: str) -> str:
+  digest = hashlib.blake2s(text.encode('UTF-8')).digest()
+  base64encoded = base64.b64encode(digest, altchars=b'-_')
+  return base64encoded[:16].decode('UTF-8')
 
 
 def _current_frame(context: Context) -> int:
