@@ -139,7 +139,7 @@ class KIRITANIFY_OT_NewTachieSequences(bpy.types.Operator):
     )
     seq.frame_final_start = frame_start
     seq.frame_final_end = frame_end
-    seq.alpha_mode = 'ALPHA_OVER'
+    seq.blend_type = "ALPHA_OVER"
 
     seq.use_translation = True
     seq.transform.offset_x = chara.tachie_style.offset_x_px
