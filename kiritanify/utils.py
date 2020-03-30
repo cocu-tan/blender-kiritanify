@@ -84,7 +84,7 @@ def find_neighbor_sequence(context: Context, channel: int, target_frame: int) ->
 
 
 def split_per_num(elements: List[T], num: int) -> Iterator[Iterator[T]]:
-  num_split = len(elements) // num
+  num_split = len(elements) // num + 1
   for n in range(num_split):
     yield elements[n * num:(n + 1) * num]
 
